@@ -174,3 +174,23 @@ a{color:inherit}
   .admin-nav{grid-template-columns:1fr 1fr}
   .admin-card{padding:19px}
 }
+
+
+/* ===== Public V4 additions ===== */
+.search-panel-v4{grid-template-columns:repeat(4,minmax(150px,1fr))}
+.search-panel-v4 .search-wide{grid-column:span 2}
+.dynamic-public-filters{margin-top:14px;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-soft)}
+.dynamic-filter-title{margin-bottom:10px;font-weight:700;color:var(--accent-dark);font-size:.82rem}
+.dynamic-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px}
+.card-agent{margin-top:12px;color:var(--muted);font-size:.78rem}
+.modal-feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.modal-feature-item{display:flex;justify-content:space-between;gap:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-soft)}
+.modal-feature-item span{color:var(--muted);font-size:.78rem}
+.modal-feature-item strong{font-size:.82rem;text-align:right}
+.agent-profile-box{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:15px;align-items:center;margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface-soft)}
+.agent-profile-box>img,.agent-profile-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover}
+.agent-profile-avatar{display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-dark);font-weight:800;font-size:1.35rem}
+.agent-profile-content h3{margin:3px 0;font-family:"Playfair Display",serif}
+.agent-profile-content p{margin:4px 0 0;color:var(--muted);font-size:.78rem}
+@media(max-width:1040px){.search-panel-v4,.dynamic-filter-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.search-panel-v4,.dynamic-filter-grid{grid-template-columns:1fr}.search-panel-v4 .search-wide{grid-column:auto}.modal-feature-grid{grid-template-columns:1fr}.agent-profile-box{grid-template-columns:52px 1fr}.agent-profile-box>img,.agent-profile-avatar{width:52px;height:52px}.agent-profile-box .contact-actions{grid-column:1/-1}}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Propiedades disponibles para renta y venta — Alquileres Carpe Diem.">
+  <meta name="description" content="Propiedades disponibles — Alquileres Carpe Diem">
   <title>Alquileres Carpe Diem — Propiedades</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,644 +15,567 @@
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="index.html" aria-label="Inicio">
-        <img
-          src="logo.png"
-          alt="Alquileres Carpe Diem"
-          class="brand-logo"
-          onerror="this.style.display='none'; document.getElementById('brandFallback').style.display='grid';"
-        >
-        <div id="brandFallback" class="brand-fallback" style="display:none;">CD</div>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">
+      <img src="logo.png" alt="Alquileres Carpe Diem" class="brand-logo">
+      <div class="brand-text">
+        <h1>Alquileres Carpe Diem</h1>
+        <span>Propiedades para renta y venta</span>
+      </div>
+    </a>
 
-        <div class="brand-text">
-          <h1 id="brandName">Alquileres Carpe Diem</h1>
-          <span>Propiedades para renta y venta</span>
-        </div>
-      </a>
+    <div class="header-actions">
+      <a class="header-link" href="admin.html">Acceso agentes</a>
+    </div>
+  </div>
+</header>
 
-      <div class="header-actions">
-        <a class="header-link" href="admin.html">Acceso agente</a>
+<main>
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <span class="eyebrow">Propiedades seleccionadas</span>
+        <h2>Encuentra tu próximo espacio.</h2>
+        <p>Explora propiedades disponibles por ubicación, agente, tipo de inmueble y rango de precio.</p>
       </div>
     </div>
-  </header>
+  </section>
 
-  <main>
-    <section class="hero">
-      <div class="container hero-inner">
-        <div class="hero-copy">
-          <span class="eyebrow">Tu próximo espacio empieza aquí</span>
-          <h2>Encuentra una propiedad que se sienta como hogar.</h2>
-          <p>Explora inmuebles disponibles para renta y venta y contáctanos directamente para recibir más información.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="search-section" aria-label="Filtros de propiedades">
-      <div class="container">
-        <div class="search-panel">
-          <div class="search-field search-wide">
-            <label for="searchText">Buscar</label>
-            <input id="searchText" type="search" placeholder="Zona, título o descripción">
-          </div>
-
-          <div class="search-field">
-            <label for="typeFilter">Operación</label>
-            <select id="typeFilter">
-              <option value="todas">Todas</option>
-              <option value="renta">Renta</option>
-              <option value="venta">Venta</option>
-            </select>
-          </div>
-
-          <div class="search-field">
-            <label for="bedFilter">Habitaciones</label>
-            <select id="bedFilter">
-              <option value="0">Cualquiera</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-              <option value="4">4+</option>
-            </select>
-          </div>
-
-          <div class="search-field">
-            <label for="maxPrice">Precio máximo</label>
-            <input id="maxPrice" type="number" min="0" step="100" placeholder="Sin límite">
-          </div>
-
-          <div class="search-field">
-            <label for="sortFilter">Ordenar</label>
-            <select id="sortFilter">
-              <option value="recientes">Más recientes</option>
-              <option value="precio-asc">Precio: menor a mayor</option>
-              <option value="precio-desc">Precio: mayor a menor</option>
-              <option value="titulo">Título A–Z</option>
-            </select>
-          </div>
-
-          <button id="clearFilters" class="btn btn-secondary filter-clear" type="button">Limpiar</button>
+  <section class="search-section">
+    <div class="container">
+      <div class="search-panel search-panel-v4">
+        <div class="search-field search-wide">
+          <label for="fText">Buscar</label>
+          <input id="fText" type="search" placeholder="Título, referencia o descripción">
         </div>
 
-        <div class="results-bar">
-          <p id="resultCount">Cargando propiedades…</p>
+        <div class="search-field">
+          <label for="fType">Tipo</label>
+          <select id="fType"><option value="">Cualquier tipo</option></select>
         </div>
-      </div>
-    </section>
 
-    <section class="catalog">
-      <div class="container">
-        <div id="catalogStatus" class="catalog-status">Cargando propiedades…</div>
-        <div class="grid" id="grid"></div>
-
-        <div class="empty-state" id="emptyState" style="display:none;">
-          <h3>No encontramos propiedades con esos filtros.</h3>
-          <p>Prueba ampliando tu búsqueda o limpiando los filtros.</p>
-          <button class="btn btn-secondary" id="emptyClearBtn" type="button">Ver todas</button>
+        <div class="search-field">
+          <label for="fOperation">Operación</label>
+          <select id="fOperation">
+            <option value="">Cualquiera</option>
+            <option value="renta">Renta</option>
+            <option value="venta">Venta</option>
+          </select>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <div>
-        <strong id="footerBrand">Alquileres Carpe Diem</strong>
-        <p>Todas las propiedades están sujetas a disponibilidad.</p>
+        <div class="search-field">
+          <label for="fAgent">Agente</label>
+          <select id="fAgent"><option value="">Cualquier agente</option></select>
+        </div>
+
+        <div class="search-field">
+          <label for="fDepartment">Departamento</label>
+          <select id="fDepartment"><option value="">Cualquier departamento</option></select>
+        </div>
+
+        <div class="search-field">
+          <label for="fMunicipality">Municipio</label>
+          <select id="fMunicipality" disabled><option value="">Cualquier municipio</option></select>
+        </div>
+
+        <div class="search-field">
+          <label for="fZone">Zona</label>
+          <select id="fZone" disabled><option value="">Cualquier zona</option></select>
+        </div>
+
+        <div class="search-field">
+          <label for="fCurrency">Moneda</label>
+          <select id="fCurrency">
+            <option value="">Cualquiera</option>
+            <option value="GTQ">GTQ</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+
+        <div class="search-field">
+          <label for="fMin">Precio desde</label>
+          <input id="fMin" type="number" min="0" step="100" placeholder="Sin mínimo">
+        </div>
+
+        <div class="search-field">
+          <label for="fMax">Precio hasta</label>
+          <input id="fMax" type="number" min="0" step="100" placeholder="Sin máximo">
+        </div>
+
+        <div class="search-field">
+          <label for="fSort">Ordenar</label>
+          <select id="fSort">
+            <option value="recent">Más recientes</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+            <option value="title">Título A–Z</option>
+          </select>
+        </div>
+
+        <button id="clearFilters" class="btn btn-secondary filter-clear" type="button">Limpiar</button>
       </div>
 
-      <div class="footer-links">
-        <a id="footerWhatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a>
-        <a id="footerEmail" href="#">Correo</a>
+      <div id="dynamicFilterBox" class="dynamic-public-filters" style="display:none;">
+        <div class="dynamic-filter-title">
+          <span>Más filtros</span>
+        </div>
+        <div id="dynamicFilters" class="dynamic-filter-grid"></div>
+      </div>
+
+      <div class="results-bar">
+        <p id="resultCount">Cargando propiedades…</p>
       </div>
     </div>
-  </footer>
+  </section>
 
-  <div id="modalRoot"></div>
+  <section class="catalog">
+    <div class="container">
+      <div id="catalogStatus" class="catalog-status">Cargando propiedades…</div>
+      <div id="grid" class="grid"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <h3>No encontramos propiedades.</h3>
+        <p>Prueba cambiando o limpiando los filtros.</p>
+        <button id="emptyClear" class="btn btn-secondary" type="button">Ver todas</button>
+      </div>
+    </div>
+  </section>
+</main>
 
-  <script>
-    const grid = document.getElementById('grid');
-    const emptyState = document.getElementById('emptyState');
-    const modalRoot = document.getElementById('modalRoot');
-    const catalogStatus = document.getElementById('catalogStatus');
-    const resultCount = document.getElementById('resultCount');
+<footer>
+  <div class="container footer-inner">
+    <div>
+      <strong>Alquileres Carpe Diem</strong>
+      <p>Todas las propiedades están sujetas a disponibilidad.</p>
+    </div>
+  </div>
+</footer>
 
-    const searchText = document.getElementById('searchText');
-    const typeFilter = document.getElementById('typeFilter');
-    const bedFilter = document.getElementById('bedFilter');
-    const maxPrice = document.getElementById('maxPrice');
-    const sortFilter = document.getElementById('sortFilter');
-    const clearFilters = document.getElementById('clearFilters');
-    const emptyClearBtn = document.getElementById('emptyClearBtn');
+<div id="modalRoot"></div>
 
-    let allProperties = [];
-    let supabaseClient = null;
-    let galleryIndex = 0;
-    let currentModalProperty = null;
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 
-    function contactData() {
-      return {
-        nombreNegocio:
-          (typeof CONTACTO !== 'undefined' && CONTACTO.nombreNegocio)
-            ? CONTACTO.nombreNegocio
-            : 'Alquileres Carpe Diem',
-        whatsapp:
-          (typeof CONTACTO !== 'undefined' && CONTACTO.whatsapp)
-            ? CONTACTO.whatsapp
-            : '',
-        correo:
-          (typeof CONTACTO !== 'undefined' && CONTACTO.correo)
-            ? CONTACTO.correo
-            : ''
-      };
-    }
+<script>
+const $ = id => document.getElementById(id);
 
-    function initBranding() {
-      const c = contactData();
-      document.getElementById('brandName').textContent = c.nombreNegocio;
-      document.getElementById('footerBrand').textContent = c.nombreNegocio;
-      document.title = `${c.nombreNegocio} — Propiedades`;
+let db = null;
+let properties = [];
+let propertyCharacteristics = [];
+let types = [];
+let agents = [];
+let departments = [];
+let filterCharacteristics = [];
 
-      const wa = document.getElementById('footerWhatsapp');
-      const mail = document.getElementById('footerEmail');
+function esc(v) {
+  return String(v ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
 
-      if (c.whatsapp) {
-        wa.href = `https://wa.me/${c.whatsapp}`;
-      } else {
-        wa.style.display = 'none';
-      }
+function money(v, currency) {
+  const symbol = currency === 'USD' ? '$' : 'Q';
+  return `${symbol}${Number(v || 0).toLocaleString('es-GT', { maximumFractionDigits: 2 })}`;
+}
 
-      if (c.correo) {
-        mail.href = `mailto:${c.correo}`;
-      } else {
-        mail.style.display = 'none';
-      }
-    }
+function normalize(v) {
+  return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
 
-    function initSupabase() {
-      try {
-        if (!window.supabase || !window.supabase.createClient) {
-          throw new Error('No se pudo cargar la librería de Supabase.');
-        }
+function initSupabase() {
+  if (!window.supabase?.createClient) throw new Error('No se pudo cargar Supabase.');
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 
-        if (typeof SUPABASE_URL === 'undefined' || !SUPABASE_URL) {
-          throw new Error('No se encontró SUPABASE_URL.');
-        }
+async function bootstrap() {
+  const [typeRes, agentRes, deptRes, charRes] = await Promise.all([
+    db.from('tipos_inmueble').select('*').eq('activo', true).order('orden'),
+    db.from('agentes').select('id,nombre,apellido,whatsapp,correo,foto_url,biografia').eq('activo', true).order('nombre'),
+    db.from('departamentos').select('*').eq('activo', true).order('nombre'),
+    db.from('caracteristicas').select('*').eq('activo', true).order('orden')
+  ]);
 
-        if (typeof SUPABASE_ANON_KEY === 'undefined' || !SUPABASE_ANON_KEY) {
-          throw new Error('No se encontró SUPABASE_ANON_KEY.');
-        }
+  [typeRes, agentRes, deptRes, charRes].forEach(r => { if (r.error) throw r.error; });
 
-        supabaseClient = window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_ANON_KEY
-        );
-      } catch (error) {
-        console.error(error);
-        catalogStatus.innerHTML = `
-          <div class="status-card status-error">
-            <strong>No fue posible conectar con la base de datos.</strong>
-            <span>${escapeHtml(error.message || '')}</span>
-          </div>`;
-      }
-    }
+  types = typeRes.data || [];
+  agents = agentRes.data || [];
+  departments = deptRes.data || [];
+  filterCharacteristics = (charRes.data || []).filter(c => c.usar_como_filtro);
 
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return '';
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
+  $('fType').innerHTML = '<option value="">Cualquier tipo</option>' +
+    types.map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
 
-    function formatPrice(price, currency) {
-      const amount = Number(price || 0);
-      return `${currency || 'Q'} ${amount.toLocaleString('es-GT', {
-        maximumFractionDigits: 2
-      })}`;
-    }
+  $('fAgent').innerHTML = '<option value="">Cualquier agente</option>' +
+    agents.map(x => `<option value="${x.id}">${esc([x.nombre,x.apellido].filter(Boolean).join(' '))}</option>`).join('');
 
-    function isAvailable(property) {
-      const value = property.disponible;
-      return (
-        value === true ||
-        value === 'true' ||
-        value === 1 ||
-        value === '1'
-      );
-    }
+  $('fDepartment').innerHTML = '<option value="">Cualquier departamento</option>' +
+    departments.map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
 
-    function photoArray(property) {
-      if (!Array.isArray(property.fotos)) return [];
-      return property.fotos.filter(Boolean);
-    }
+  renderDynamicFilters();
+  await loadProperties();
+}
 
-    function normalizeText(value) {
-      return String(value || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-    }
+async function loadProperties() {
+  $('catalogStatus').style.display = 'block';
+  $('catalogStatus').textContent = 'Cargando propiedades…';
 
-    function filteredProperties() {
-      const query = normalizeText(searchText.value.trim());
-      const type = typeFilter.value;
-      const bedrooms = Number(bedFilter.value || 0);
-      const priceLimit = Number(maxPrice.value || 0);
+  const { data, error } = await db
+    .from('propiedades')
+    .select(`
+      *,
+      tipos_inmueble(id,nombre),
+      agentes(id,nombre,apellido,whatsapp,correo,foto_url,biografia),
+      departamentos(id,nombre),
+      municipios(id,nombre),
+      zonas(id,nombre),
+      propiedad_fotos(id,url,principal,orden),
+      propiedad_caracteristicas(
+        caracteristica_id,
+        valor,
+        caracteristicas(id,nombre,slug,categoria,tipo_valor,unidad,mostrar_en_tarjeta,usar_como_filtro,orden)
+      )
+    `)
+    .eq('publicada', true)
+    .eq('disponible', true);
 
-      let result = allProperties.filter(property => {
-        if (!isAvailable(property)) return false;
+  if (error) throw error;
 
-        if (type !== 'todas' && property.tipo !== type) return false;
+  properties = data || [];
+  $('catalogStatus').style.display = 'none';
+  render();
+}
 
-        if (bedrooms > 0 && Number(property.habitaciones || 0) < bedrooms) {
-          return false;
-        }
+async function loadMunicipalities(deptId) {
+  $('fMunicipality').innerHTML = '<option value="">Cualquier municipio</option>';
+  $('fZone').innerHTML = '<option value="">Cualquier zona</option>';
+  $('fMunicipality').disabled = true;
+  $('fZone').disabled = true;
 
-        if (priceLimit > 0 && Number(property.precio || 0) > priceLimit) {
-          return false;
-        }
+  if (!deptId) {
+    render();
+    return;
+  }
 
-        if (query) {
-          const haystack = normalizeText(
-            `${property.titulo || ''} ${property.ubicacion || ''} ${property.descripcion || ''}`
-          );
-          if (!haystack.includes(query)) return false;
-        }
+  const { data, error } = await db
+    .from('municipios')
+    .select('*')
+    .eq('departamento_id', deptId)
+    .eq('activo', true)
+    .order('nombre');
 
-        return true;
-      });
+  if (error) throw error;
 
-      switch (sortFilter.value) {
-        case 'precio-asc':
-          result.sort((a, b) => Number(a.precio || 0) - Number(b.precio || 0));
-          break;
+  $('fMunicipality').innerHTML = '<option value="">Cualquier municipio</option>' +
+    (data || []).map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+  $('fMunicipality').disabled = false;
+  render();
+}
 
-        case 'precio-desc':
-          result.sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
-          break;
+async function loadZones(municipalityId) {
+  $('fZone').innerHTML = '<option value="">Cualquier zona</option>';
+  $('fZone').disabled = true;
 
-        case 'titulo':
-          result.sort((a, b) =>
-            String(a.titulo || '').localeCompare(String(b.titulo || ''), 'es')
-          );
-          break;
+  if (!municipalityId) {
+    render();
+    return;
+  }
 
-        default:
-          result.sort((a, b) => {
-            const aTime = a.creado ? new Date(a.creado).getTime() : 0;
-            const bTime = b.creado ? new Date(b.creado).getTime() : 0;
-            return (bTime || 0) - (aTime || 0);
-          });
-      }
+  const { data, error } = await db
+    .from('zonas')
+    .select('*')
+    .eq('municipio_id', municipalityId)
+    .eq('activo', true)
+    .order('es_sin_zona', { ascending: true })
+    .order('numero_zona', { ascending: true, nullsFirst: false })
+    .order('nombre');
 
-      return result;
-    }
+  if (error) throw error;
 
-    function cardPhoto(property) {
-      const photos = photoArray(property);
-      if (!photos.length) {
-        return `<div class="card-img card-img-empty"><span>Sin fotografía</span></div>`;
-      }
+  $('fZone').innerHTML = '<option value="">Cualquier zona</option>' +
+    (data || []).map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+  $('fZone').disabled = false;
+  render();
+}
 
+function featureValue(property, featureId) {
+  const row = (property.propiedad_caracteristicas || []).find(x => x.caracteristica_id === featureId);
+  return row ? row.valor : null;
+}
+
+function formatFeature(row) {
+  const c = row.caracteristicas;
+  const v = row.valor;
+  if (!c) return '';
+  if (c.tipo_valor === 'booleano') return v === true ? 'Sí' : 'No';
+  if (c.tipo_valor === 'moneda') return Number(v).toLocaleString('es-GT');
+  return `${v}${c.unidad ? ' ' + c.unidad : ''}`;
+}
+
+function renderDynamicFilters() {
+  const box = $('dynamicFilterBox');
+  const container = $('dynamicFilters');
+
+  if (!filterCharacteristics.length) {
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+
+  container.innerHTML = filterCharacteristics.map(c => {
+    if (c.tipo_valor === 'booleano') {
       return `
-        <div class="card-img">
-          <img src="${escapeHtml(photos[0])}" alt="${escapeHtml(property.titulo || 'Propiedad')}" loading="lazy">
-          ${photos.length > 1 ? `<span class="photo-count">📷 ${photos.length}</span>` : ''}
+        <div class="search-field">
+          <label>${esc(c.nombre)}</label>
+          <select data-dynamic-filter="${c.id}" data-type="booleano">
+            <option value="">Cualquiera</option>
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
         </div>`;
     }
 
-    function renderGrid() {
-      const properties = filteredProperties();
-
-      grid.innerHTML = '';
-      catalogStatus.style.display = 'none';
-      emptyState.style.display = properties.length ? 'none' : 'block';
-
-      resultCount.textContent =
-        properties.length === 1
-          ? '1 propiedad disponible'
-          : `${properties.length} propiedades disponibles`;
-
-      properties.forEach(property => {
-        const card = document.createElement('article');
-        card.className = 'card';
-        card.tabIndex = 0;
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `Ver ${property.titulo || 'propiedad'}`);
-
-        const operation =
-          property.tipo === 'venta' ? 'En venta' : 'En renta';
-
-        card.innerHTML = `
-          ${cardPhoto(property)}
-
-          <div class="card-body">
-            <div class="card-topline">
-              <span class="operation-badge">${operation}</span>
-              <span class="card-price">
-                ${escapeHtml(formatPrice(property.precio, property.moneda))}
-                ${property.tipo === 'renta' ? '<small>/mes</small>' : ''}
-              </span>
-            </div>
-
-            <h3>${escapeHtml(property.titulo || 'Propiedad')}</h3>
-
-            <p class="card-loc">📍 ${escapeHtml(property.ubicacion || 'Ubicación por confirmar')}</p>
-
-            <div class="card-specs">
-              <span><strong>${escapeHtml(property.habitaciones ?? '—')}</strong> hab.</span>
-              <span><strong>${escapeHtml(property.banos ?? '—')}</strong> baños</span>
-              <span><strong>${escapeHtml(property.metros ?? '—')}</strong> m²</span>
-              <span><strong>${escapeHtml(property.parqueos ?? '—')}</strong> parqueos</span>
-            </div>
-
-            <button type="button" class="card-cta">Ver detalles</button>
-          </div>`;
-
-        const open = () => openModal(property);
-        card.addEventListener('click', open);
-        card.addEventListener('keydown', event => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            open();
-          }
-        });
-
-        grid.appendChild(card);
-      });
+    if (['numero','decimal','moneda'].includes(c.tipo_valor)) {
+      return `
+        <div class="search-field">
+          <label>${esc(c.nombre)} mínimo${c.unidad ? ' ('+esc(c.unidad)+')' : ''}</label>
+          <input type="number" data-dynamic-filter="${c.id}" data-type="${c.tipo_valor}" step="${c.tipo_valor === 'numero' ? '1' : '0.01'}" placeholder="Cualquiera">
+        </div>`;
     }
 
-    function renderModalGallery() {
-      if (!currentModalProperty) return;
+    return '';
+  }).join('');
 
-      const photos = photoArray(currentModalProperty);
-      const main = document.getElementById('modalMainImage');
-      const counter = document.getElementById('galleryCounter');
-      const thumbs = document.getElementById('modalThumbs');
+  container.querySelectorAll('[data-dynamic-filter]').forEach(el => {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+}
 
-      if (!main || !counter || !thumbs) return;
+function filtered() {
+  const text = normalize($('fText').value.trim());
+  const type = $('fType').value;
+  const operation = $('fOperation').value;
+  const agent = $('fAgent').value;
+  const department = $('fDepartment').value;
+  const municipality = $('fMunicipality').value;
+  const zone = $('fZone').value;
+  const currency = $('fCurrency').value;
+  const min = Number($('fMin').value || 0);
+  const max = Number($('fMax').value || 0);
 
-      if (!photos.length) {
-        main.removeAttribute('src');
-        main.alt = 'Sin fotografía';
-        main.style.display = 'none';
-        counter.textContent = 'Sin fotografías';
-        thumbs.innerHTML = '';
-        return;
+  let list = properties.filter(p => {
+    if (type && p.tipo_inmueble_id !== type) return false;
+    if (operation && p.tipo_operacion !== operation) return false;
+    if (agent && p.agente_id !== agent) return false;
+    if (department && p.departamento_id !== department) return false;
+    if (municipality && p.municipio_id !== municipality) return false;
+    if (zone && p.zona_id !== zone) return false;
+    if (currency && p.moneda !== currency) return false;
+    if (min && Number(p.precio || 0) < min) return false;
+    if (max && Number(p.precio || 0) > max) return false;
+
+    if (text) {
+      const haystack = normalize(`${p.titulo || ''} ${p.direccion_referencia || ''} ${p.descripcion || ''}`);
+      if (!haystack.includes(text)) return false;
+    }
+
+    for (const el of document.querySelectorAll('[data-dynamic-filter]')) {
+      if (el.value === '') continue;
+      const value = featureValue(p, el.dataset.dynamicFilter);
+
+      if (el.dataset.type === 'booleano') {
+        if (String(value) !== el.value) return false;
+      } else {
+        if (value === null || Number(value) < Number(el.value)) return false;
       }
-
-      galleryIndex = Math.max(0, Math.min(galleryIndex, photos.length - 1));
-
-      main.style.display = 'block';
-      main.src = photos[galleryIndex];
-      main.alt = currentModalProperty.titulo || 'Propiedad';
-      counter.textContent = `${galleryIndex + 1} / ${photos.length}`;
-
-      thumbs.innerHTML = photos.map((photo, index) => `
-        <button
-          type="button"
-          class="modal-thumb ${index === galleryIndex ? 'active' : ''}"
-          data-gallery-index="${index}"
-          aria-label="Ver fotografía ${index + 1}"
-        >
-          <img src="${escapeHtml(photo)}" alt="">
-        </button>
-      `).join('');
     }
 
-    function openModal(property) {
-      currentModalProperty = property;
-      galleryIndex = 0;
+    return true;
+  });
 
-      const c = contactData();
-      const photos = photoArray(property);
+  switch ($('fSort').value) {
+    case 'price-asc':
+      list.sort((a,b) => Number(a.precio)-Number(b.precio));
+      break;
+    case 'price-desc':
+      list.sort((a,b) => Number(b.precio)-Number(a.precio));
+      break;
+    case 'title':
+      list.sort((a,b) => String(a.titulo).localeCompare(String(b.titulo),'es'));
+      break;
+    default:
+      list.sort((a,b) => new Date(b.creado || 0) - new Date(a.creado || 0));
+  }
 
-      const whatsappMessage = encodeURIComponent(
-        `Hola, me interesa la propiedad "${property.titulo || 'Propiedad'}" ` +
-        `(${formatPrice(property.precio, property.moneda)}${property.tipo === 'renta' ? ' al mes' : ''}). ` +
-        `¿Podrían darme más información?`
-      );
+  return list;
+}
 
-      const whatsappLink =
-        c.whatsapp
-          ? `https://wa.me/${c.whatsapp}?text=${whatsappMessage}`
-          : '';
+function cardFeatures(p) {
+  return (p.propiedad_caracteristicas || [])
+    .filter(x => x.caracteristicas?.mostrar_en_tarjeta)
+    .sort((a,b) => (a.caracteristicas?.orden || 0) - (b.caracteristicas?.orden || 0))
+    .slice(0,4);
+}
 
-      const emailLink =
-        c.correo
-          ? `mailto:${c.correo}?subject=${encodeURIComponent(
-              'Interés en propiedad: ' + (property.titulo || 'Propiedad')
-            )}`
-          : '';
+function render() {
+  const list = filtered();
+  $('resultCount').textContent = list.length === 1 ? '1 propiedad disponible' : `${list.length} propiedades disponibles`;
+  $('grid').innerHTML = '';
+  $('emptyState').style.display = list.length ? 'none' : 'block';
 
-      modalRoot.innerHTML = `
-        <div class="modal-overlay" id="modalOverlay">
-          <div class="modal" role="dialog" aria-modal="true" aria-label="Detalle de propiedad">
-            <button id="modalCloseBtn" class="modal-close-btn" type="button" aria-label="Cerrar">✕</button>
+  for (const p of list) {
+    const photos = (p.propiedad_fotos || []).slice().sort((a,b) => (a.orden || 0)-(b.orden || 0));
+    const first = photos[0]?.url;
+    const fts = cardFeatures(p);
+    const agentName = [p.agentes?.nombre,p.agentes?.apellido].filter(Boolean).join(' ');
 
-            <div class="modal-gallery-wrap ${photos.length ? '' : 'no-photo'}">
-              <img id="modalMainImage" class="modal-main-image" src="" alt="">
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-img ${first ? '' : 'card-img-empty'}">
+        ${first ? `<img src="${esc(first)}" alt="${esc(p.titulo)}" loading="lazy">` : '<span>Sin fotografía</span>'}
+        ${photos.length > 1 ? `<span class="photo-count">📷 ${photos.length}</span>` : ''}
+      </div>
 
-              ${photos.length > 1 ? `
-                <button id="galleryPrev" class="gallery-nav gallery-prev" type="button" aria-label="Fotografía anterior">‹</button>
-                <button id="galleryNext" class="gallery-nav gallery-next" type="button" aria-label="Fotografía siguiente">›</button>
-              ` : ''}
+      <div class="card-body">
+        <div class="card-topline">
+          <span class="operation-badge">${p.tipo_operacion === 'venta' ? 'En venta' : 'En renta'}</span>
+          <span class="card-price">${esc(money(p.precio,p.moneda))}${p.tipo_operacion === 'renta' ? '<small>/mes</small>' : ''}</span>
+        </div>
 
-              <span id="galleryCounter" class="gallery-counter"></span>
+        <h3>${esc(p.titulo)}</h3>
+        <p class="card-loc">📍 ${esc([p.zonas?.nombre,p.municipios?.nombre,p.departamentos?.nombre].filter(Boolean).join(', '))}</p>
+
+        <div class="card-specs">
+          ${fts.map(x => `<span><strong>${esc(formatFeature(x))}</strong> ${esc(x.caracteristicas.nombre)}</span>`).join('')}
+        </div>
+
+        <div class="card-agent">👤 ${esc(agentName || 'Agente')}</div>
+        <button class="card-cta" type="button">Ver detalles</button>
+      </div>`;
+
+    card.addEventListener('click', () => openModal(p));
+    $('grid').appendChild(card);
+  }
+}
+
+function openModal(p) {
+  const photos = (p.propiedad_fotos || []).slice().sort((a,b) => (a.orden || 0)-(b.orden || 0));
+  const allFeatures = (p.propiedad_caracteristicas || []).slice().sort((a,b) => (a.caracteristicas?.orden || 0)-(b.caracteristicas?.orden || 0));
+  const agentName = [p.agentes?.nombre,p.agentes?.apellido].filter(Boolean).join(' ');
+  const msg = encodeURIComponent(`Hola ${p.agentes?.nombre || ''}, me interesa la propiedad "${p.titulo}" publicada en Alquileres Carpe Diem.`);
+  const wa = p.agentes?.whatsapp ? `https://wa.me/${p.agentes.whatsapp}?text=${msg}` : '';
+  const mail = p.agentes?.correo ? `mailto:${p.agentes.correo}?subject=${encodeURIComponent('Interés en '+p.titulo)}` : '';
+
+  $('modalRoot').innerHTML = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <button id="modalClose" class="modal-close-btn" type="button">✕</button>
+
+        ${photos.length ? `
+          <div class="modal-gallery-wrap">
+            <img class="modal-main-image" id="modalMainImage" src="${esc(photos[0].url)}" alt="${esc(p.titulo)}">
+          </div>
+          <div class="modal-thumbs">
+            ${photos.map((x,i) => `<button class="modal-thumb ${i===0?'active':''}" data-photo="${i}" type="button"><img src="${esc(x.url)}" alt=""></button>`).join('')}
+          </div>` : ''}
+
+        <div class="modal-body">
+          <div class="modal-heading-row">
+            <div>
+              <span class="operation-badge">${p.tipo_operacion === 'venta' ? 'En venta' : 'En renta'}</span>
+              <h2>${esc(p.titulo)}</h2>
+              <p class="modal-location">📍 ${esc([p.zonas?.nombre,p.municipios?.nombre,p.departamentos?.nombre].filter(Boolean).join(', '))}</p>
             </div>
+            <div class="modal-price">${esc(money(p.precio,p.moneda))}${p.tipo_operacion === 'renta' ? '<small>/mes</small>' : ''}</div>
+          </div>
 
-            <div id="modalThumbs" class="modal-thumbs"></div>
+          ${p.descripcion ? `<div class="property-description"><h3>Descripción</h3><p>${esc(p.descripcion)}</p></div>` : ''}
 
-            <div class="modal-body">
-              <div class="modal-heading-row">
-                <div>
-                  <span class="operation-badge">${property.tipo === 'venta' ? 'En venta' : 'En renta'}</span>
-                  <h2>${escapeHtml(property.titulo || 'Propiedad')}</h2>
-                  <p class="modal-location">📍 ${escapeHtml(property.ubicacion || 'Ubicación por confirmar')}</p>
-                </div>
-
-                <div class="modal-price">
-                  ${escapeHtml(formatPrice(property.precio, property.moneda))}
-                  ${property.tipo === 'renta' ? '<small>/mes</small>' : ''}
-                </div>
-              </div>
-
-              <div class="modal-specs">
-                <div class="spec-item"><strong>${escapeHtml(property.habitaciones ?? '—')}</strong><span>Habitaciones</span></div>
-                <div class="spec-item"><strong>${escapeHtml(property.banos ?? '—')}</strong><span>Baños</span></div>
-                <div class="spec-item"><strong>${escapeHtml(property.metros ?? '—')}</strong><span>m² construcción</span></div>
-                <div class="spec-item"><strong>${escapeHtml(property.parqueos ?? '—')}</strong><span>Parqueos</span></div>
-              </div>
-
-              ${property.descripcion ? `
-                <div class="property-description">
-                  <h3>Descripción</h3>
-                  <p>${escapeHtml(property.descripcion)}</p>
-                </div>
-              ` : ''}
-
-              <div class="contact-box">
-                <div>
-                  <span class="eyebrow">¿Te interesa esta propiedad?</span>
-                  <h3>Contáctanos directamente</h3>
-                </div>
-
-                <div class="contact-actions">
-                  ${whatsappLink ? `
-                    <a class="btn btn-whatsapp" href="${whatsappLink}" target="_blank" rel="noopener">
-                      WhatsApp
-                    </a>` : ''}
-
-                  ${emailLink ? `
-                    <a class="btn btn-email" href="${emailLink}">
-                      Correo
-                    </a>` : ''}
-                </div>
-              </div>
+          <div class="property-description">
+            <h3>Características</h3>
+            <div class="modal-feature-grid">
+              ${allFeatures.map(x => `
+                <div class="modal-feature-item">
+                  <span>${esc(x.caracteristicas?.nombre || '')}</span>
+                  <strong>${esc(formatFeature(x))}</strong>
+                </div>`).join('')}
             </div>
           </div>
-        </div>`;
 
-      document.body.classList.add('modal-open');
+          <div class="agent-profile-box">
+            ${p.agentes?.foto_url ? `<img src="${esc(p.agentes.foto_url)}" alt="${esc(agentName)}">` : `<div class="agent-profile-avatar">${esc((p.agentes?.nombre || 'A').charAt(0))}</div>`}
+            <div class="agent-profile-content">
+              <span class="eyebrow">Agente</span>
+              <h3>${esc(agentName || 'Agente')}</h3>
+              ${p.agentes?.biografia ? `<p>${esc(p.agentes.biografia)}</p>` : ''}
+            </div>
+            <div class="contact-actions">
+              ${wa ? `<a class="btn btn-whatsapp" target="_blank" rel="noopener" href="${wa}">WhatsApp</a>` : ''}
+              ${mail ? `<a class="btn btn-email" href="${mail}">Correo</a>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
 
-      renderModalGallery();
+  $('modalClose').addEventListener('click', closeModal);
+  $('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
 
-      document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-      document.getElementById('modalOverlay').addEventListener('click', event => {
-        if (event.target.id === 'modalOverlay') closeModal();
-      });
-
-      const prev = document.getElementById('galleryPrev');
-      const next = document.getElementById('galleryNext');
-
-      if (prev) {
-        prev.addEventListener('click', event => {
-          event.stopPropagation();
-          const count = photoArray(currentModalProperty).length;
-          galleryIndex = (galleryIndex - 1 + count) % count;
-          renderModalGallery();
-        });
-      }
-
-      if (next) {
-        next.addEventListener('click', event => {
-          event.stopPropagation();
-          const count = photoArray(currentModalProperty).length;
-          galleryIndex = (galleryIndex + 1) % count;
-          renderModalGallery();
-        });
-      }
-
-      document.getElementById('modalThumbs').addEventListener('click', event => {
-        const button = event.target.closest('[data-gallery-index]');
-        if (!button) return;
-        galleryIndex = Number(button.dataset.galleryIndex);
-        renderModalGallery();
-      });
-    }
-
-    function closeModal() {
-      modalRoot.innerHTML = '';
-      currentModalProperty = null;
-      document.body.classList.remove('modal-open');
-    }
-
-    function applyFilters() {
-      renderGrid();
-    }
-
-    function resetFilters() {
-      searchText.value = '';
-      typeFilter.value = 'todas';
-      bedFilter.value = '0';
-      maxPrice.value = '';
-      sortFilter.value = 'recientes';
-      renderGrid();
-    }
-
-    [searchText, typeFilter, bedFilter, maxPrice, sortFilter].forEach(control => {
-      control.addEventListener('input', applyFilters);
-      control.addEventListener('change', applyFilters);
+  document.querySelectorAll('[data-photo]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const i = Number(btn.dataset.photo);
+      $('modalMainImage').src = photos[i].url;
+      document.querySelectorAll('[data-photo]').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
     });
+  });
 
-    clearFilters.addEventListener('click', resetFilters);
-    emptyClearBtn.addEventListener('click', resetFilters);
+  document.body.classList.add('modal-open');
+}
 
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && currentModalProperty) {
-        closeModal();
-      }
-    });
+function closeModal() {
+  $('modalRoot').innerHTML = '';
+  document.body.classList.remove('modal-open');
+}
 
-    async function loadProperties() {
-      if (!supabaseClient) return;
+function clearFilters() {
+  ['fText','fMin','fMax'].forEach(id => $(id).value = '');
+  ['fType','fOperation','fAgent','fDepartment','fCurrency','fSort'].forEach(id => $(id).value = id === 'fSort' ? 'recent' : '');
+  $('fMunicipality').innerHTML = '<option value="">Cualquier municipio</option>';
+  $('fMunicipality').disabled = true;
+  $('fZone').innerHTML = '<option value="">Cualquier zona</option>';
+  $('fZone').disabled = true;
+  document.querySelectorAll('[data-dynamic-filter]').forEach(el => el.value = '');
+  render();
+}
 
-      catalogStatus.style.display = 'block';
-      catalogStatus.textContent = 'Cargando propiedades…';
-      grid.innerHTML = '';
-      emptyState.style.display = 'none';
+['fText','fType','fOperation','fAgent','fCurrency','fMin','fMax','fSort'].forEach(id => {
+  $(id).addEventListener('input', render);
+  $(id).addEventListener('change', render);
+});
 
-      try {
-        const { data, error } = await supabaseClient
-          .from('propiedades')
-          .select('*');
+$('fDepartment').addEventListener('change', () => loadMunicipalities($('fDepartment').value).catch(showError));
+$('fMunicipality').addEventListener('change', () => loadZones($('fMunicipality').value).catch(showError));
+$('fZone').addEventListener('change', render);
+$('clearFilters').addEventListener('click', clearFilters);
+$('emptyClear').addEventListener('click', clearFilters);
 
-        if (error) throw error;
+function showError(error) {
+  console.error(error);
+  $('catalogStatus').style.display = 'block';
+  $('catalogStatus').innerHTML = `<div class="status-card status-error"><strong>No se pudieron cargar los datos.</strong><span>${esc(error.message || '')}</span></div>`;
+}
 
-        allProperties = Array.isArray(data)
-          ? data.filter(isAvailable)
-          : [];
-
-        catalogStatus.style.display = 'none';
-        renderGrid();
-      } catch (error) {
-        console.error('Error cargando propiedades:', error);
-
-        resultCount.textContent = 'No se pudieron cargar las propiedades';
-        catalogStatus.style.display = 'block';
-        catalogStatus.innerHTML = `
-          <div class="status-card status-error">
-            <strong>No se pudieron cargar las propiedades.</strong>
-            <span>${escapeHtml(error.message || 'Error desconocido')}</span>
-          </div>`;
-      }
-    }
-
-    initBranding();
-    initSupabase();
-    loadProperties();
-
-    if (supabaseClient) {
-      try {
-        supabaseClient
-          .channel('propiedades-publicas')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'propiedades' },
-            () => loadProperties()
-          )
-          .subscribe();
-      } catch (error) {
-        console.warn('Realtime no pudo iniciarse:', error);
-      }
-    }
-
-    window.addEventListener('pageshow', () => {
-      if (supabaseClient) loadProperties();
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && supabaseClient) {
-        loadProperties();
-      }
-    });
-  </script>
+try {
+  initSupabase();
+  bootstrap().catch(showError);
+} catch (error) {
+  showError(error);
+}
+</script>
 </body>
 </html>

@@ -1,0 +1,23 @@
+CARPE DIEM - FRONTEND NORMALIZADO
+
+Reemplaza en GitHub:
+- index.html
+- admin.html
+- styles.css
+
+Conserva:
+- supabase-config.js
+- logo.png
+- establecer-clave.html
+
+Cambios:
+- Se elimina del panel el botón de sincronización INE.
+- Ubicaciones queda como catálogo local.
+- El sitio público ahora lee la nueva estructura normalizada:
+  agentes, tipos_inmueble, departamentos, municipios, zonas,
+  propiedad_fotos y propiedad_caracteristicas.
+- Filtros por agente, tipo, operación, departamento, municipio,
+  zona, moneda, precio mínimo y máximo.
+- "Cualquier zona" significa no aplicar filtro.
+- Los filtros marcados usar_como_filtro en el maestro aparecen
+  dinámicamente.

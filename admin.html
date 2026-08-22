@@ -457,17 +457,16 @@
           <div class="admin-card">
             <div class="admin-card-header">
               <div>
-                <span class="eyebrow">Sincronización</span>
-                <h3>Catálogo territorial del INE</h3>
+                <span class="eyebrow">Catálogo territorial</span>
+                <h3>Ubicaciones cargadas</h3>
               </div>
             </div>
 
             <p class="muted">
-              Ejecuta la función administrativa que carga o actualiza departamentos, municipios y zonas desde la fuente configurada.
+              El catálogo territorial se administra localmente en Supabase. Incluye los 22 departamentos,
+              340 municipios, “Sin zona / No aplica” para cada municipio y las zonas oficiales identificadas
+              directamente en la fuente del INE.
             </p>
-
-            <button id="syncIneBtn" class="btn btn-primary" type="button">Sincronizar con INE</button>
-            <span id="syncIneStatus" class="status-msg"></span>
           </div>
 
           <div class="admin-card">
@@ -1361,29 +1360,6 @@ async function loadLocationStats() {
   qs('locZones').textContent = z.count ?? 0;
 }
 
-async function syncIne() {
-  const status = qs('syncIneStatus');
-  qs('syncIneBtn').disabled = true;
-  setStatus(status, 'Sincronizando; puede tomar varios minutos...');
-
-  try {
-    const { data, error } = await db.functions.invoke('sincronizar-ubicaciones-ine', { body: {} });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-
-    setStatus(
-      status,
-      `✓ Sincronización completada. Departamentos: ${data.departamentos ?? '—'}, municipios: ${data.municipios ?? '—'}, zonas: ${data.zonas_ine ?? '—'}.`,
-      'success'
-    );
-
-    await loadDepartments();
-    await loadLocationStats();
-  } finally {
-    qs('syncIneBtn').disabled = false;
-  }
-}
-
 function populateProfile() {
   qs('meName').value = currentAgent.nombre || '';
   qs('meSurname').value = currentAgent.apellido || '';
@@ -1595,7 +1571,6 @@ qs('featureMasterList').addEventListener('click', (e) => {
 qs('typeConfigSelect').addEventListener('change', () => loadTypeFeatureConfig(qs('typeConfigSelect').value).catch(showError));
 qs('saveTypeConfigBtn').addEventListener('click', () => saveTypeFeatureConfig().catch(error => setStatus(qs('typeConfigStatus'), error.message, 'error')));
 
-qs('syncIneBtn').addEventListener('click', () => syncIne().catch(error => setStatus(qs('syncIneStatus'), error.message, 'error')));
 
 qs('locDepartmentSelect').addEventListener('change', async () => {
   await loadMunicipalities(qs('locDepartmentSelect').value, qs('locMunicipalitySelect'));
