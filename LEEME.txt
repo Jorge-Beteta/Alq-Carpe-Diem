@@ -1,33 +1,23 @@
-ALQ-CARPE-DIEM — FILTROS SELECCIONABLES
+CORRECCIÓN — FILTROS DE CARACTERÍSTICAS INDIVIDUALES
 
-En GitHub reemplaza:
-1. index.html
-2. styles.css
+Reemplaza en GitHub:
+- index.html
+- styles.css
 
-Conserva:
-- admin.html
-- supabase-config.js
-- logo.png
-- establecer-clave.html
+Ahora “Más filtros” muestra individualmente todas las características
+del maestro que tengan usar_como_filtro = true.
 
-Filtros visibles siempre:
-- Buscar
-- Tipo de inmueble
-- Operación
-- Departamento
-- Precio máximo
+Ejemplos:
+- Habitaciones
+- Baños
+- Parqueos
+- Área de construcción
+- Cisterna
+- Jardín
+- Piscina
+- Elevador
 
-En “Más filtros”, el usuario puede activar:
-- Agente
-- Municipio
-- Zona
-- Moneda
-- Precio mínimo
-- Ordenar resultados
-- Características dinámicas
+Ya no aparece un único checkbox genérico “Características”.
 
-Notas:
-- Municipio depende de Departamento.
-- Zona depende de Municipio.
-- “Cualquier zona” significa que no se filtra por zona.
-- Las características que aparecen son las marcadas como usar_como_filtro=true.
+Si una característica nueva se marca usar_como_filtro=true desde el
+administrador, aparecerá automáticamente en “Más filtros”.

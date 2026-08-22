@@ -132,10 +132,7 @@
             <span>Ordenar resultados</span>
           </label>
 
-          <label class="filter-picker-item">
-            <input type="checkbox" data-filter-toggle="features">
-            <span>Características</span>
-          </label>
+          <div id="featureFilterPicker"></div>
         </div>
 
         <div class="selected-advanced-filters">
@@ -196,11 +193,8 @@
             </div>
           </div>
 
-          <div class="optional-filter features-filter-block" data-filter-name="features" hidden>
-            <div id="dynamicFilterBox" class="dynamic-public-filters" hidden>
-              <div class="dynamic-filter-title">Características</div>
-              <div id="dynamicFilters" class="dynamic-filter-grid"></div>
-            </div>
+          <div id="dynamicFilterBox" class="features-filter-block" hidden>
+            <div id="dynamicFilters" class="dynamic-filter-grid"></div>
           </div>
         </div>
       </div>
@@ -442,50 +436,77 @@ async function loadZones(municipalityId) {
 }
 
 function renderDynamicFilters() {
+  const picker = $('featureFilterPicker');
   const box = $('dynamicFilterBox');
   const container = $('dynamicFilters');
 
   if (!filterCharacteristics.length) {
+    picker.innerHTML = '';
     box.hidden = true;
     return;
   }
 
-  box.hidden = false;
+  picker.innerHTML = filterCharacteristics.map(c => `
+    <label class="filter-picker-item">
+      <input
+        type="checkbox"
+        data-feature-toggle="${c.id}">
+      <span>${esc(c.nombre)}</span>
+    </label>
+  `).join('');
 
-  container.innerHTML =
-    filterCharacteristics.map(c => {
-      if (c.tipo_valor === 'booleano') {
-        return `
-          <div class="search-field">
-            <label>${esc(c.nombre)}</label>
-            <select
-              data-dynamic-filter="${c.id}"
-              data-type="booleano">
-              <option value="">Cualquiera</option>
-              <option value="true">Sí</option>
-              <option value="false">No</option>
-            </select>
-          </div>`;
-      }
+  container.innerHTML = filterCharacteristics.map(c => {
+    let control = '';
 
-      if (['numero','decimal','moneda'].includes(c.tipo_valor)) {
-        return `
-          <div class="search-field">
-            <label>
-              ${esc(c.nombre)} mínimo
-              ${c.unidad ? `(${esc(c.unidad)})` : ''}
-            </label>
-            <input
-              type="number"
-              data-dynamic-filter="${c.id}"
-              data-type="${c.tipo_valor}"
-              step="${c.tipo_valor === 'numero' ? '1' : '0.01'}"
-              placeholder="Cualquiera">
-          </div>`;
-      }
+    if (c.tipo_valor === 'booleano') {
+      control = `
+        <select
+          data-dynamic-filter="${c.id}"
+          data-type="booleano">
+          <option value="">Cualquiera</option>
+          <option value="true">Sí</option>
+          <option value="false">No</option>
+        </select>`;
+    } else if (['numero','decimal','moneda'].includes(c.tipo_valor)) {
+      control = `
+        <input
+          type="number"
+          data-dynamic-filter="${c.id}"
+          data-type="${c.tipo_valor}"
+          step="${c.tipo_valor === 'numero' ? '1' : '0.01'}"
+          placeholder="Cualquiera">`;
+    } else {
+      control = `
+        <input
+          type="text"
+          data-dynamic-filter="${c.id}"
+          data-type="${c.tipo_valor}"
+          placeholder="Cualquiera">`;
+    }
 
-      return '';
-    }).join('');
+    return `
+      <div
+        class="optional-filter feature-optional-filter"
+        data-feature-filter-name="${c.id}"
+        hidden>
+        <div class="search-field">
+          <label>
+            ${esc(c.nombre)}
+            ${c.unidad ? `(${esc(c.unidad)})` : ''}
+          </label>
+          ${control}
+        </div>
+      </div>`;
+  }).join('');
+
+  picker
+    .querySelectorAll('[data-feature-toggle]')
+    .forEach(toggle => {
+      toggle.addEventListener('change', () => {
+        updateOptionalFilters();
+        render();
+      });
+    });
 
   container
     .querySelectorAll('[data-dynamic-filter]')
@@ -493,6 +514,8 @@ function renderDynamicFilters() {
       el.addEventListener('input', render);
       el.addEventListener('change', render);
     });
+
+  updateOptionalFilters();
 }
 
 function featureValue(property, featureId) {
@@ -523,6 +546,12 @@ function formatFeature(row) {
 function isFilterOn(name) {
   return !!document.querySelector(
     `[data-filter-toggle="${name}"]`
+  )?.checked;
+}
+
+function isFeatureFilterOn(featureId) {
+  return !!document.querySelector(
+    `[data-feature-toggle="${featureId}"]`
   )?.checked;
 }
 
@@ -583,24 +612,31 @@ function filtered() {
       if (!haystack.includes(text)) return false;
     }
 
-    if (isFilterOn('features')) {
-      for (
-        const el
-        of document.querySelectorAll('[data-dynamic-filter]')
-      ) {
-        if (el.value === '') continue;
+    for (
+      const el
+      of document.querySelectorAll('[data-dynamic-filter]')
+    ) {
+      const featureId = el.dataset.dynamicFilter;
 
-        const value =
-          featureValue(p, el.dataset.dynamicFilter);
+      if (!isFeatureFilterOn(featureId)) continue;
+      if (el.value === '') continue;
 
-        if (el.dataset.type === 'booleano') {
-          if (String(value) !== el.value) return false;
-        } else {
-          if (
-            value === null ||
-            Number(value) < Number(el.value)
-          ) return false;
-        }
+      const value = featureValue(p, featureId);
+
+      if (el.dataset.type === 'booleano') {
+        if (String(value) !== el.value) return false;
+      } else if (['numero','decimal','moneda'].includes(el.dataset.type)) {
+        if (
+          value === null ||
+          Number(value) < Number(el.value)
+        ) return false;
+      } else {
+        if (
+          value === null ||
+          !normalize(String(value)).includes(
+            normalize(el.value)
+          )
+        ) return false;
       }
     }
 
@@ -971,6 +1007,25 @@ function updateOptionalFilters() {
       }
     });
 
+  document
+    .querySelectorAll('[data-feature-toggle]')
+    .forEach(toggle => {
+      const target =
+        document.querySelector(
+          `[data-feature-filter-name="${toggle.dataset.featureToggle}"]`
+        );
+
+      if (target) {
+        target.hidden = !toggle.checked;
+      }
+    });
+
+  const anyFeatureActive =
+    !!document.querySelector('[data-feature-toggle]:checked');
+
+  $('dynamicFilterBox').hidden =
+    !anyFeatureActive;
+
   updateActiveFilterChips();
 }
 
@@ -1029,6 +1084,31 @@ function updateActiveFilterChips() {
     }
   });
 
+  document
+    .querySelectorAll('[data-dynamic-filter]')
+    .forEach(el => {
+      const featureId = el.dataset.dynamicFilter;
+
+      if (!isFeatureFilterOn(featureId)) return;
+      if (!el.value) return;
+
+      const feature =
+        filterCharacteristics.find(c => c.id === featureId);
+
+      if (!feature) return;
+
+      let shownValue = el.value;
+
+      if (el.dataset.type === 'booleano') {
+        shownValue =
+          el.value === 'true' ? 'Sí' : 'No';
+      }
+
+      chips.push(
+        `${feature.nombre}: ${shownValue}${feature.unidad ? ' ' + feature.unidad : ''}`
+      );
+    });
+
   const container = $('activeFilterChips');
 
   container.innerHTML =
@@ -1072,6 +1152,10 @@ function clearFilters() {
 
   document
     .querySelectorAll('[data-filter-toggle]')
+    .forEach(el => el.checked = false);
+
+  document
+    .querySelectorAll('[data-feature-toggle]')
     .forEach(el => el.checked = false);
 
   updateOptionalFilters();

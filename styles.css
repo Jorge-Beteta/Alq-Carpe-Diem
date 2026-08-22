@@ -956,3 +956,17 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Características individuales dentro de "Más filtros" */
+#featureFilterPicker {
+  display: contents;
+}
+
+#dynamicFilterBox {
+  grid-column: 1 / -1;
+}
+
+.feature-optional-filter {
+  min-width: 0;
+}
