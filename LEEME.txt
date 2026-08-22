@@ -1,23 +1,33 @@
-CARPE DIEM - FRONTEND NORMALIZADO
+ALQ-CARPE-DIEM — FILTROS SELECCIONABLES
 
-Reemplaza en GitHub:
-- index.html
-- admin.html
-- styles.css
+En GitHub reemplaza:
+1. index.html
+2. styles.css
 
 Conserva:
+- admin.html
 - supabase-config.js
 - logo.png
 - establecer-clave.html
 
-Cambios:
-- Se elimina del panel el botón de sincronización INE.
-- Ubicaciones queda como catálogo local.
-- El sitio público ahora lee la nueva estructura normalizada:
-  agentes, tipos_inmueble, departamentos, municipios, zonas,
-  propiedad_fotos y propiedad_caracteristicas.
-- Filtros por agente, tipo, operación, departamento, municipio,
-  zona, moneda, precio mínimo y máximo.
-- "Cualquier zona" significa no aplicar filtro.
-- Los filtros marcados usar_como_filtro en el maestro aparecen
-  dinámicamente.
+Filtros visibles siempre:
+- Buscar
+- Tipo de inmueble
+- Operación
+- Departamento
+- Precio máximo
+
+En “Más filtros”, el usuario puede activar:
+- Agente
+- Municipio
+- Zona
+- Moneda
+- Precio mínimo
+- Ordenar resultados
+- Características dinámicas
+
+Notas:
+- Municipio depende de Departamento.
+- Zona depende de Municipio.
+- “Cualquier zona” significa que no se filtra por zona.
+- Las características que aparecen son las marcadas como usar_como_filtro=true.

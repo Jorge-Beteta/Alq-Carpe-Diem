@@ -44,15 +44,18 @@
 
   <section class="search-section">
     <div class="container">
-      <div class="search-panel search-panel-v4">
-        <div class="search-field search-wide">
+      <div class="search-panel compact-search-panel">
+
+        <div class="search-field search-main">
           <label for="fText">Buscar</label>
           <input id="fText" type="search" placeholder="Título, referencia o descripción">
         </div>
 
         <div class="search-field">
-          <label for="fType">Tipo</label>
-          <select id="fType"><option value="">Cualquier tipo</option></select>
+          <label for="fType">Tipo de inmueble</label>
+          <select id="fType">
+            <option value="">Cualquier tipo</option>
+          </select>
         </div>
 
         <div class="search-field">
@@ -65,63 +68,144 @@
         </div>
 
         <div class="search-field">
-          <label for="fAgent">Agente</label>
-          <select id="fAgent"><option value="">Cualquier agente</option></select>
-        </div>
-
-        <div class="search-field">
           <label for="fDepartment">Departamento</label>
-          <select id="fDepartment"><option value="">Cualquier departamento</option></select>
-        </div>
-
-        <div class="search-field">
-          <label for="fMunicipality">Municipio</label>
-          <select id="fMunicipality" disabled><option value="">Cualquier municipio</option></select>
-        </div>
-
-        <div class="search-field">
-          <label for="fZone">Zona</label>
-          <select id="fZone" disabled><option value="">Cualquier zona</option></select>
-        </div>
-
-        <div class="search-field">
-          <label for="fCurrency">Moneda</label>
-          <select id="fCurrency">
-            <option value="">Cualquiera</option>
-            <option value="GTQ">GTQ</option>
-            <option value="USD">USD</option>
+          <select id="fDepartment">
+            <option value="">Cualquier departamento</option>
           </select>
         </div>
 
         <div class="search-field">
-          <label for="fMin">Precio desde</label>
-          <input id="fMin" type="number" min="0" step="100" placeholder="Sin mínimo">
-        </div>
-
-        <div class="search-field">
-          <label for="fMax">Precio hasta</label>
+          <label for="fMax">Precio máximo</label>
           <input id="fMax" type="number" min="0" step="100" placeholder="Sin máximo">
         </div>
 
-        <div class="search-field">
-          <label for="fSort">Ordenar</label>
-          <select id="fSort">
-            <option value="recent">Más recientes</option>
-            <option value="price-asc">Precio: menor a mayor</option>
-            <option value="price-desc">Precio: mayor a menor</option>
-            <option value="title">Título A–Z</option>
-          </select>
-        </div>
+        <button id="moreFiltersBtn" class="btn btn-secondary more-filters-btn" type="button">
+          + Más filtros
+        </button>
 
-        <button id="clearFilters" class="btn btn-secondary filter-clear" type="button">Limpiar</button>
+        <button id="clearFilters" class="btn btn-ghost filter-clear" type="button">
+          Limpiar
+        </button>
       </div>
 
-      <div id="dynamicFilterBox" class="dynamic-public-filters" style="display:none;">
-        <div class="dynamic-filter-title">
-          <span>Más filtros</span>
+      <div id="advancedFiltersPanel" class="advanced-filters-panel" hidden>
+        <div class="advanced-filters-header">
+          <div>
+            <span class="eyebrow">Personaliza tu búsqueda</span>
+            <h3>Elige los filtros que quieres usar</h3>
+            <p>Activa solo los criterios que te interesen.</p>
+          </div>
+
+          <button id="closeAdvancedFilters" class="icon-close" type="button" aria-label="Cerrar">
+            ✕
+          </button>
         </div>
-        <div id="dynamicFilters" class="dynamic-filter-grid"></div>
+
+        <div class="filter-picker-grid">
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="agent">
+            <span>Agente</span>
+          </label>
+
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="municipality">
+            <span>Municipio</span>
+          </label>
+
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="zone">
+            <span>Zona</span>
+          </label>
+
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="currency">
+            <span>Moneda</span>
+          </label>
+
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="minprice">
+            <span>Precio mínimo</span>
+          </label>
+
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="sort">
+            <span>Ordenar resultados</span>
+          </label>
+
+          <label class="filter-picker-item">
+            <input type="checkbox" data-filter-toggle="features">
+            <span>Características</span>
+          </label>
+        </div>
+
+        <div class="selected-advanced-filters">
+          <div class="optional-filter" data-filter-name="agent" hidden>
+            <div class="search-field">
+              <label for="fAgent">Agente</label>
+              <select id="fAgent">
+                <option value="">Cualquier agente</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="optional-filter" data-filter-name="municipality" hidden>
+            <div class="search-field">
+              <label for="fMunicipality">Municipio</label>
+              <select id="fMunicipality" disabled>
+                <option value="">Cualquier municipio</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="optional-filter" data-filter-name="zone" hidden>
+            <div class="search-field">
+              <label for="fZone">Zona</label>
+              <select id="fZone" disabled>
+                <option value="">Cualquier zona</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="optional-filter" data-filter-name="currency" hidden>
+            <div class="search-field">
+              <label for="fCurrency">Moneda</label>
+              <select id="fCurrency">
+                <option value="">Cualquiera</option>
+                <option value="GTQ">GTQ</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="optional-filter" data-filter-name="minprice" hidden>
+            <div class="search-field">
+              <label for="fMin">Precio mínimo</label>
+              <input id="fMin" type="number" min="0" step="100" placeholder="Sin mínimo">
+            </div>
+          </div>
+
+          <div class="optional-filter" data-filter-name="sort" hidden>
+            <div class="search-field">
+              <label for="fSort">Ordenar</label>
+              <select id="fSort">
+                <option value="recent">Más recientes</option>
+                <option value="price-asc">Precio: menor a mayor</option>
+                <option value="price-desc">Precio: mayor a menor</option>
+                <option value="title">Título A–Z</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="optional-filter features-filter-block" data-filter-name="features" hidden>
+            <div id="dynamicFilterBox" class="dynamic-public-filters" hidden>
+              <div class="dynamic-filter-title">Características</div>
+              <div id="dynamicFilters" class="dynamic-filter-grid"></div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div id="activeFilterChips" class="active-filter-chips" hidden></div>
 
       <div class="results-bar">
         <p id="resultCount">Cargando propiedades…</p>
@@ -134,7 +218,7 @@
       <div id="catalogStatus" class="catalog-status">Cargando propiedades…</div>
       <div id="grid" class="grid"></div>
 
-      <div id="emptyState" class="empty-state" style="display:none;">
+      <div id="emptyState" class="empty-state" hidden>
         <h3>No encontramos propiedades.</h3>
         <p>Prueba cambiando o limpiando los filtros.</p>
         <button id="emptyClear" class="btn btn-secondary" type="button">Ver todas</button>
@@ -162,7 +246,6 @@ const $ = id => document.getElementById(id);
 
 let db = null;
 let properties = [];
-let propertyCharacteristics = [];
 let types = [];
 let agents = [];
 let departments = [];
@@ -170,54 +253,97 @@ let filterCharacteristics = [];
 
 function esc(v) {
   return String(v ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function normalize(v) {
+  return String(v || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'');
 }
 
 function money(v, currency) {
   const symbol = currency === 'USD' ? '$' : 'Q';
-  return `${symbol}${Number(v || 0).toLocaleString('es-GT', { maximumFractionDigits: 2 })}`;
-}
-
-function normalize(v) {
-  return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return `${symbol}${Number(v || 0).toLocaleString('es-GT', {
+    maximumFractionDigits: 2
+  })}`;
 }
 
 function initSupabase() {
-  if (!window.supabase?.createClient) throw new Error('No se pudo cargar Supabase.');
-  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!window.supabase?.createClient) {
+    throw new Error('No se pudo cargar Supabase.');
+  }
+
+  db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 }
 
 async function bootstrap() {
   const [typeRes, agentRes, deptRes, charRes] = await Promise.all([
-    db.from('tipos_inmueble').select('*').eq('activo', true).order('orden'),
-    db.from('agentes').select('id,nombre,apellido,whatsapp,correo,foto_url,biografia').eq('activo', true).order('nombre'),
-    db.from('departamentos').select('*').eq('activo', true).order('nombre'),
-    db.from('caracteristicas').select('*').eq('activo', true).order('orden')
+    db.from('tipos_inmueble')
+      .select('*')
+      .eq('activo', true)
+      .order('orden'),
+
+    db.from('agentes')
+      .select('id,nombre,apellido,whatsapp,correo,foto_url,biografia')
+      .eq('activo', true)
+      .order('nombre'),
+
+    db.from('departamentos')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre'),
+
+    db.from('caracteristicas')
+      .select('*')
+      .eq('activo', true)
+      .order('orden')
   ]);
 
-  [typeRes, agentRes, deptRes, charRes].forEach(r => { if (r.error) throw r.error; });
+  [typeRes, agentRes, deptRes, charRes].forEach(r => {
+    if (r.error) throw r.error;
+  });
 
   types = typeRes.data || [];
   agents = agentRes.data || [];
   departments = deptRes.data || [];
-  filterCharacteristics = (charRes.data || []).filter(c => c.usar_como_filtro);
+  filterCharacteristics =
+    (charRes.data || []).filter(c => c.usar_como_filtro);
 
-  $('fType').innerHTML = '<option value="">Cualquier tipo</option>' +
-    types.map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+  $('fType').innerHTML =
+    '<option value="">Cualquier tipo</option>' +
+    types.map(x =>
+      `<option value="${x.id}">${esc(x.nombre)}</option>`
+    ).join('');
 
-  $('fAgent').innerHTML = '<option value="">Cualquier agente</option>' +
-    agents.map(x => `<option value="${x.id}">${esc([x.nombre,x.apellido].filter(Boolean).join(' '))}</option>`).join('');
+  $('fAgent').innerHTML =
+    '<option value="">Cualquier agente</option>' +
+    agents.map(x =>
+      `<option value="${x.id}">${esc(
+        [x.nombre,x.apellido].filter(Boolean).join(' ')
+      )}</option>`
+    ).join('');
 
-  $('fDepartment').innerHTML = '<option value="">Cualquier departamento</option>' +
-    departments.map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+  $('fDepartment').innerHTML =
+    '<option value="">Cualquier departamento</option>' +
+    departments.map(x =>
+      `<option value="${x.id}">${esc(x.nombre)}</option>`
+    ).join('');
 
   renderDynamicFilters();
   await loadProperties();
 }
 
 async function loadProperties() {
-  $('catalogStatus').style.display = 'block';
+  $('catalogStatus').hidden = false;
   $('catalogStatus').textContent = 'Cargando propiedades…';
 
   const { data, error } = await db
@@ -233,7 +359,10 @@ async function loadProperties() {
       propiedad_caracteristicas(
         caracteristica_id,
         valor,
-        caracteristicas(id,nombre,slug,categoria,tipo_valor,unidad,mostrar_en_tarjeta,usar_como_filtro,orden)
+        caracteristicas(
+          id,nombre,slug,categoria,tipo_valor,unidad,
+          mostrar_en_tarjeta,usar_como_filtro,orden
+        )
       )
     `)
     .eq('publicada', true)
@@ -242,13 +371,17 @@ async function loadProperties() {
   if (error) throw error;
 
   properties = data || [];
-  $('catalogStatus').style.display = 'none';
+  $('catalogStatus').hidden = true;
   render();
 }
 
 async function loadMunicipalities(deptId) {
-  $('fMunicipality').innerHTML = '<option value="">Cualquier municipio</option>';
-  $('fZone').innerHTML = '<option value="">Cualquier zona</option>';
+  $('fMunicipality').innerHTML =
+    '<option value="">Cualquier municipio</option>';
+
+  $('fZone').innerHTML =
+    '<option value="">Cualquier zona</option>';
+
   $('fMunicipality').disabled = true;
   $('fZone').disabled = true;
 
@@ -266,14 +399,20 @@ async function loadMunicipalities(deptId) {
 
   if (error) throw error;
 
-  $('fMunicipality').innerHTML = '<option value="">Cualquier municipio</option>' +
-    (data || []).map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+  $('fMunicipality').innerHTML =
+    '<option value="">Cualquier municipio</option>' +
+    (data || []).map(x =>
+      `<option value="${x.id}">${esc(x.nombre)}</option>`
+    ).join('');
+
   $('fMunicipality').disabled = false;
   render();
 }
 
 async function loadZones(municipalityId) {
-  $('fZone').innerHTML = '<option value="">Cualquier zona</option>';
+  $('fZone').innerHTML =
+    '<option value="">Cualquier zona</option>';
+
   $('fZone').disabled = true;
 
   if (!municipalityId) {
@@ -292,24 +431,14 @@ async function loadZones(municipalityId) {
 
   if (error) throw error;
 
-  $('fZone').innerHTML = '<option value="">Cualquier zona</option>' +
-    (data || []).map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+  $('fZone').innerHTML =
+    '<option value="">Cualquier zona</option>' +
+    (data || []).map(x =>
+      `<option value="${x.id}">${esc(x.nombre)}</option>`
+    ).join('');
+
   $('fZone').disabled = false;
   render();
-}
-
-function featureValue(property, featureId) {
-  const row = (property.propiedad_caracteristicas || []).find(x => x.caracteristica_id === featureId);
-  return row ? row.valor : null;
-}
-
-function formatFeature(row) {
-  const c = row.caracteristicas;
-  const v = row.valor;
-  if (!c) return '';
-  if (c.tipo_valor === 'booleano') return v === true ? 'Sí' : 'No';
-  if (c.tipo_valor === 'moneda') return Number(v).toLocaleString('es-GT');
-  return `${v}${c.unidad ? ' ' + c.unidad : ''}`;
 }
 
 function renderDynamicFilters() {
@@ -317,96 +446,199 @@ function renderDynamicFilters() {
   const container = $('dynamicFilters');
 
   if (!filterCharacteristics.length) {
-    box.style.display = 'none';
+    box.hidden = true;
     return;
   }
 
-  box.style.display = 'block';
+  box.hidden = false;
 
-  container.innerHTML = filterCharacteristics.map(c => {
-    if (c.tipo_valor === 'booleano') {
-      return `
-        <div class="search-field">
-          <label>${esc(c.nombre)}</label>
-          <select data-dynamic-filter="${c.id}" data-type="booleano">
-            <option value="">Cualquiera</option>
-            <option value="true">Sí</option>
-            <option value="false">No</option>
-          </select>
-        </div>`;
-    }
+  container.innerHTML =
+    filterCharacteristics.map(c => {
+      if (c.tipo_valor === 'booleano') {
+        return `
+          <div class="search-field">
+            <label>${esc(c.nombre)}</label>
+            <select
+              data-dynamic-filter="${c.id}"
+              data-type="booleano">
+              <option value="">Cualquiera</option>
+              <option value="true">Sí</option>
+              <option value="false">No</option>
+            </select>
+          </div>`;
+      }
 
-    if (['numero','decimal','moneda'].includes(c.tipo_valor)) {
-      return `
-        <div class="search-field">
-          <label>${esc(c.nombre)} mínimo${c.unidad ? ' ('+esc(c.unidad)+')' : ''}</label>
-          <input type="number" data-dynamic-filter="${c.id}" data-type="${c.tipo_valor}" step="${c.tipo_valor === 'numero' ? '1' : '0.01'}" placeholder="Cualquiera">
-        </div>`;
-    }
+      if (['numero','decimal','moneda'].includes(c.tipo_valor)) {
+        return `
+          <div class="search-field">
+            <label>
+              ${esc(c.nombre)} mínimo
+              ${c.unidad ? `(${esc(c.unidad)})` : ''}
+            </label>
+            <input
+              type="number"
+              data-dynamic-filter="${c.id}"
+              data-type="${c.tipo_valor}"
+              step="${c.tipo_valor === 'numero' ? '1' : '0.01'}"
+              placeholder="Cualquiera">
+          </div>`;
+      }
 
-    return '';
-  }).join('');
+      return '';
+    }).join('');
 
-  container.querySelectorAll('[data-dynamic-filter]').forEach(el => {
-    el.addEventListener('input', render);
-    el.addEventListener('change', render);
-  });
+  container
+    .querySelectorAll('[data-dynamic-filter]')
+    .forEach(el => {
+      el.addEventListener('input', render);
+      el.addEventListener('change', render);
+    });
+}
+
+function featureValue(property, featureId) {
+  const row =
+    (property.propiedad_caracteristicas || [])
+      .find(x => x.caracteristica_id === featureId);
+
+  return row ? row.valor : null;
+}
+
+function formatFeature(row) {
+  const c = row.caracteristicas;
+  const v = row.valor;
+
+  if (!c) return '';
+
+  if (c.tipo_valor === 'booleano') {
+    return v === true ? 'Sí' : 'No';
+  }
+
+  if (c.tipo_valor === 'moneda') {
+    return Number(v).toLocaleString('es-GT');
+  }
+
+  return `${v}${c.unidad ? ' ' + c.unidad : ''}`;
+}
+
+function isFilterOn(name) {
+  return !!document.querySelector(
+    `[data-filter-toggle="${name}"]`
+  )?.checked;
+}
+
+function optionalValue(id, fallback = '') {
+  const el = $(id);
+  return el ? el.value : fallback;
 }
 
 function filtered() {
   const text = normalize($('fText').value.trim());
   const type = $('fType').value;
   const operation = $('fOperation').value;
-  const agent = $('fAgent').value;
   const department = $('fDepartment').value;
-  const municipality = $('fMunicipality').value;
-  const zone = $('fZone').value;
-  const currency = $('fCurrency').value;
-  const min = Number($('fMin').value || 0);
   const max = Number($('fMax').value || 0);
+
+  const agent =
+    isFilterOn('agent')
+      ? optionalValue('fAgent')
+      : '';
+
+  const municipality =
+    isFilterOn('municipality')
+      ? optionalValue('fMunicipality')
+      : '';
+
+  const zone =
+    isFilterOn('zone')
+      ? optionalValue('fZone')
+      : '';
+
+  const currency =
+    isFilterOn('currency')
+      ? optionalValue('fCurrency')
+      : '';
+
+  const min =
+    isFilterOn('minprice')
+      ? Number(optionalValue('fMin') || 0)
+      : 0;
 
   let list = properties.filter(p => {
     if (type && p.tipo_inmueble_id !== type) return false;
     if (operation && p.tipo_operacion !== operation) return false;
-    if (agent && p.agente_id !== agent) return false;
     if (department && p.departamento_id !== department) return false;
+    if (max && Number(p.precio || 0) > max) return false;
+
+    if (agent && p.agente_id !== agent) return false;
     if (municipality && p.municipio_id !== municipality) return false;
     if (zone && p.zona_id !== zone) return false;
     if (currency && p.moneda !== currency) return false;
     if (min && Number(p.precio || 0) < min) return false;
-    if (max && Number(p.precio || 0) > max) return false;
 
     if (text) {
-      const haystack = normalize(`${p.titulo || ''} ${p.direccion_referencia || ''} ${p.descripcion || ''}`);
+      const haystack = normalize(
+        `${p.titulo || ''} ${p.direccion_referencia || ''} ${p.descripcion || ''}`
+      );
+
       if (!haystack.includes(text)) return false;
     }
 
-    for (const el of document.querySelectorAll('[data-dynamic-filter]')) {
-      if (el.value === '') continue;
-      const value = featureValue(p, el.dataset.dynamicFilter);
+    if (isFilterOn('features')) {
+      for (
+        const el
+        of document.querySelectorAll('[data-dynamic-filter]')
+      ) {
+        if (el.value === '') continue;
 
-      if (el.dataset.type === 'booleano') {
-        if (String(value) !== el.value) return false;
-      } else {
-        if (value === null || Number(value) < Number(el.value)) return false;
+        const value =
+          featureValue(p, el.dataset.dynamicFilter);
+
+        if (el.dataset.type === 'booleano') {
+          if (String(value) !== el.value) return false;
+        } else {
+          if (
+            value === null ||
+            Number(value) < Number(el.value)
+          ) return false;
+        }
       }
     }
 
     return true;
   });
 
-  switch ($('fSort').value) {
+  const sort =
+    isFilterOn('sort')
+      ? optionalValue('fSort', 'recent')
+      : 'recent';
+
+  switch (sort) {
     case 'price-asc':
-      list.sort((a,b) => Number(a.precio)-Number(b.precio));
+      list.sort(
+        (a,b) => Number(a.precio) - Number(b.precio)
+      );
       break;
+
     case 'price-desc':
-      list.sort((a,b) => Number(b.precio)-Number(a.precio));
+      list.sort(
+        (a,b) => Number(b.precio) - Number(a.precio)
+      );
       break;
+
     case 'title':
-      list.sort((a,b) => String(a.titulo).localeCompare(String(b.titulo),'es'));
+      list.sort(
+        (a,b) =>
+          String(a.titulo)
+            .localeCompare(String(b.titulo), 'es')
+      );
       break;
+
     default:
-      list.sort((a,b) => new Date(b.creado || 0) - new Date(a.creado || 0));
+      list.sort(
+        (a,b) =>
+          new Date(b.creado || 0) -
+          new Date(a.creado || 0)
+      );
   }
 
   return list;
@@ -415,124 +647,307 @@ function filtered() {
 function cardFeatures(p) {
   return (p.propiedad_caracteristicas || [])
     .filter(x => x.caracteristicas?.mostrar_en_tarjeta)
-    .sort((a,b) => (a.caracteristicas?.orden || 0) - (b.caracteristicas?.orden || 0))
+    .sort(
+      (a,b) =>
+        (a.caracteristicas?.orden || 0) -
+        (b.caracteristicas?.orden || 0)
+    )
     .slice(0,4);
 }
 
 function render() {
   const list = filtered();
-  $('resultCount').textContent = list.length === 1 ? '1 propiedad disponible' : `${list.length} propiedades disponibles`;
+
+  $('resultCount').textContent =
+    list.length === 1
+      ? '1 propiedad disponible'
+      : `${list.length} propiedades disponibles`;
+
   $('grid').innerHTML = '';
-  $('emptyState').style.display = list.length ? 'none' : 'block';
+  $('emptyState').hidden = !!list.length;
 
   for (const p of list) {
-    const photos = (p.propiedad_fotos || []).slice().sort((a,b) => (a.orden || 0)-(b.orden || 0));
+    const photos =
+      (p.propiedad_fotos || [])
+        .slice()
+        .sort((a,b) => (a.orden || 0) - (b.orden || 0));
+
     const first = photos[0]?.url;
     const fts = cardFeatures(p);
-    const agentName = [p.agentes?.nombre,p.agentes?.apellido].filter(Boolean).join(' ');
+
+    const agentName =
+      [p.agentes?.nombre,p.agentes?.apellido]
+        .filter(Boolean)
+        .join(' ');
 
     const card = document.createElement('article');
     card.className = 'card';
+
     card.innerHTML = `
       <div class="card-img ${first ? '' : 'card-img-empty'}">
-        ${first ? `<img src="${esc(first)}" alt="${esc(p.titulo)}" loading="lazy">` : '<span>Sin fotografía</span>'}
-        ${photos.length > 1 ? `<span class="photo-count">📷 ${photos.length}</span>` : ''}
+        ${
+          first
+            ? `<img src="${esc(first)}" alt="${esc(p.titulo)}" loading="lazy">`
+            : '<span>Sin fotografía</span>'
+        }
+
+        ${
+          photos.length > 1
+            ? `<span class="photo-count">📷 ${photos.length}</span>`
+            : ''
+        }
       </div>
 
       <div class="card-body">
         <div class="card-topline">
-          <span class="operation-badge">${p.tipo_operacion === 'venta' ? 'En venta' : 'En renta'}</span>
-          <span class="card-price">${esc(money(p.precio,p.moneda))}${p.tipo_operacion === 'renta' ? '<small>/mes</small>' : ''}</span>
+          <span class="operation-badge">
+            ${p.tipo_operacion === 'venta' ? 'En venta' : 'En renta'}
+          </span>
+
+          <span class="card-price">
+            ${esc(money(p.precio,p.moneda))}
+            ${p.tipo_operacion === 'renta' ? '<small>/mes</small>' : ''}
+          </span>
         </div>
 
         <h3>${esc(p.titulo)}</h3>
-        <p class="card-loc">📍 ${esc([p.zonas?.nombre,p.municipios?.nombre,p.departamentos?.nombre].filter(Boolean).join(', '))}</p>
+
+        <p class="card-loc">
+          📍 ${esc(
+            [p.zonas?.nombre,p.municipios?.nombre,p.departamentos?.nombre]
+              .filter(Boolean)
+              .join(', ')
+          )}
+        </p>
 
         <div class="card-specs">
-          ${fts.map(x => `<span><strong>${esc(formatFeature(x))}</strong> ${esc(x.caracteristicas.nombre)}</span>`).join('')}
+          ${
+            fts.map(x =>
+              `<span>
+                <strong>${esc(formatFeature(x))}</strong>
+                ${esc(x.caracteristicas.nombre)}
+              </span>`
+            ).join('')
+          }
         </div>
 
-        <div class="card-agent">👤 ${esc(agentName || 'Agente')}</div>
-        <button class="card-cta" type="button">Ver detalles</button>
+        <div class="card-agent">
+          👤 ${esc(agentName || 'Agente')}
+        </div>
+
+        <button class="card-cta" type="button">
+          Ver detalles
+        </button>
       </div>`;
 
-    card.addEventListener('click', () => openModal(p));
+    card.addEventListener(
+      'click',
+      () => openModal(p)
+    );
+
     $('grid').appendChild(card);
   }
+
+  updateActiveFilterChips();
 }
 
 function openModal(p) {
-  const photos = (p.propiedad_fotos || []).slice().sort((a,b) => (a.orden || 0)-(b.orden || 0));
-  const allFeatures = (p.propiedad_caracteristicas || []).slice().sort((a,b) => (a.caracteristicas?.orden || 0)-(b.caracteristicas?.orden || 0));
-  const agentName = [p.agentes?.nombre,p.agentes?.apellido].filter(Boolean).join(' ');
-  const msg = encodeURIComponent(`Hola ${p.agentes?.nombre || ''}, me interesa la propiedad "${p.titulo}" publicada en Alquileres Carpe Diem.`);
-  const wa = p.agentes?.whatsapp ? `https://wa.me/${p.agentes.whatsapp}?text=${msg}` : '';
-  const mail = p.agentes?.correo ? `mailto:${p.agentes.correo}?subject=${encodeURIComponent('Interés en '+p.titulo)}` : '';
+  const photos =
+    (p.propiedad_fotos || [])
+      .slice()
+      .sort((a,b) => (a.orden || 0) - (b.orden || 0));
+
+  const allFeatures =
+    (p.propiedad_caracteristicas || [])
+      .slice()
+      .sort(
+        (a,b) =>
+          (a.caracteristicas?.orden || 0) -
+          (b.caracteristicas?.orden || 0)
+      );
+
+  const agentName =
+    [p.agentes?.nombre,p.agentes?.apellido]
+      .filter(Boolean)
+      .join(' ');
+
+  const message =
+    encodeURIComponent(
+      `Hola ${p.agentes?.nombre || ''}, me interesa la propiedad "${p.titulo}" publicada en Alquileres Carpe Diem.`
+    );
+
+  const wa =
+    p.agentes?.whatsapp
+      ? `https://wa.me/${p.agentes.whatsapp}?text=${message}`
+      : '';
+
+  const mail =
+    p.agentes?.correo
+      ? `mailto:${p.agentes.correo}?subject=${encodeURIComponent('Interés en ' + p.titulo)}`
+      : '';
 
   $('modalRoot').innerHTML = `
     <div class="modal-overlay" id="modalOverlay">
       <div class="modal">
-        <button id="modalClose" class="modal-close-btn" type="button">✕</button>
+        <button
+          id="modalClose"
+          class="modal-close-btn"
+          type="button">
+          ✕
+        </button>
 
-        ${photos.length ? `
-          <div class="modal-gallery-wrap">
-            <img class="modal-main-image" id="modalMainImage" src="${esc(photos[0].url)}" alt="${esc(p.titulo)}">
-          </div>
-          <div class="modal-thumbs">
-            ${photos.map((x,i) => `<button class="modal-thumb ${i===0?'active':''}" data-photo="${i}" type="button"><img src="${esc(x.url)}" alt=""></button>`).join('')}
-          </div>` : ''}
+        ${
+          photos.length
+            ? `
+              <div class="modal-gallery-wrap">
+                <img
+                  class="modal-main-image"
+                  id="modalMainImage"
+                  src="${esc(photos[0].url)}"
+                  alt="${esc(p.titulo)}">
+              </div>
+
+              <div class="modal-thumbs">
+                ${
+                  photos.map((x,i) =>
+                    `<button
+                      class="modal-thumb ${i === 0 ? 'active' : ''}"
+                      data-photo="${i}"
+                      type="button">
+                      <img src="${esc(x.url)}" alt="">
+                    </button>`
+                  ).join('')
+                }
+              </div>`
+            : ''
+        }
 
         <div class="modal-body">
           <div class="modal-heading-row">
             <div>
-              <span class="operation-badge">${p.tipo_operacion === 'venta' ? 'En venta' : 'En renta'}</span>
+              <span class="operation-badge">
+                ${p.tipo_operacion === 'venta' ? 'En venta' : 'En renta'}
+              </span>
+
               <h2>${esc(p.titulo)}</h2>
-              <p class="modal-location">📍 ${esc([p.zonas?.nombre,p.municipios?.nombre,p.departamentos?.nombre].filter(Boolean).join(', '))}</p>
+
+              <p class="modal-location">
+                📍 ${esc(
+                  [p.zonas?.nombre,p.municipios?.nombre,p.departamentos?.nombre]
+                    .filter(Boolean)
+                    .join(', ')
+                )}
+              </p>
             </div>
-            <div class="modal-price">${esc(money(p.precio,p.moneda))}${p.tipo_operacion === 'renta' ? '<small>/mes</small>' : ''}</div>
+
+            <div class="modal-price">
+              ${esc(money(p.precio,p.moneda))}
+              ${p.tipo_operacion === 'renta' ? '<small>/mes</small>' : ''}
+            </div>
           </div>
 
-          ${p.descripcion ? `<div class="property-description"><h3>Descripción</h3><p>${esc(p.descripcion)}</p></div>` : ''}
+          ${
+            p.descripcion
+              ? `
+                <div class="property-description">
+                  <h3>Descripción</h3>
+                  <p>${esc(p.descripcion)}</p>
+                </div>`
+              : ''
+          }
 
           <div class="property-description">
             <h3>Características</h3>
+
             <div class="modal-feature-grid">
-              ${allFeatures.map(x => `
-                <div class="modal-feature-item">
-                  <span>${esc(x.caracteristicas?.nombre || '')}</span>
-                  <strong>${esc(formatFeature(x))}</strong>
-                </div>`).join('')}
+              ${
+                allFeatures.map(x =>
+                  `<div class="modal-feature-item">
+                    <span>${esc(x.caracteristicas?.nombre || '')}</span>
+                    <strong>${esc(formatFeature(x))}</strong>
+                  </div>`
+                ).join('')
+              }
             </div>
           </div>
 
           <div class="agent-profile-box">
-            ${p.agentes?.foto_url ? `<img src="${esc(p.agentes.foto_url)}" alt="${esc(agentName)}">` : `<div class="agent-profile-avatar">${esc((p.agentes?.nombre || 'A').charAt(0))}</div>`}
+            ${
+              p.agentes?.foto_url
+                ? `<img src="${esc(p.agentes.foto_url)}" alt="${esc(agentName)}">`
+                : `<div class="agent-profile-avatar">
+                    ${esc((p.agentes?.nombre || 'A').charAt(0))}
+                  </div>`
+            }
+
             <div class="agent-profile-content">
               <span class="eyebrow">Agente</span>
               <h3>${esc(agentName || 'Agente')}</h3>
-              ${p.agentes?.biografia ? `<p>${esc(p.agentes.biografia)}</p>` : ''}
+
+              ${
+                p.agentes?.biografia
+                  ? `<p>${esc(p.agentes.biografia)}</p>`
+                  : ''
+              }
             </div>
+
             <div class="contact-actions">
-              ${wa ? `<a class="btn btn-whatsapp" target="_blank" rel="noopener" href="${wa}">WhatsApp</a>` : ''}
-              ${mail ? `<a class="btn btn-email" href="${mail}">Correo</a>` : ''}
+              ${
+                wa
+                  ? `<a class="btn btn-whatsapp" target="_blank" rel="noopener" href="${wa}">
+                      WhatsApp
+                    </a>`
+                  : ''
+              }
+
+              ${
+                mail
+                  ? `<a class="btn btn-email" href="${mail}">
+                      Correo
+                    </a>`
+                  : ''
+              }
             </div>
           </div>
         </div>
       </div>
     </div>`;
 
-  $('modalClose').addEventListener('click', closeModal);
-  $('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+  $('modalClose').addEventListener(
+    'click',
+    closeModal
+  );
 
-  document.querySelectorAll('[data-photo]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const i = Number(btn.dataset.photo);
-      $('modalMainImage').src = photos[i].url;
-      document.querySelectorAll('[data-photo]').forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
+  $('modalOverlay').addEventListener(
+    'click',
+    e => {
+      if (e.target.id === 'modalOverlay') {
+        closeModal();
+      }
+    }
+  );
+
+  document.querySelectorAll('[data-photo]')
+    .forEach(btn => {
+      btn.addEventListener(
+        'click',
+        e => {
+          e.stopPropagation();
+
+          const i =
+            Number(btn.dataset.photo);
+
+          $('modalMainImage').src =
+            photos[i].url;
+
+          document
+            .querySelectorAll('[data-photo]')
+            .forEach(x => x.classList.remove('active'));
+
+          btn.classList.add('active');
+        }
+      );
     });
-  });
 
   document.body.classList.add('modal-open');
 }
@@ -542,36 +957,217 @@ function closeModal() {
   document.body.classList.remove('modal-open');
 }
 
+function updateOptionalFilters() {
+  document
+    .querySelectorAll('[data-filter-toggle]')
+    .forEach(toggle => {
+      const target =
+        document.querySelector(
+          `[data-filter-name="${toggle.dataset.filterToggle}"]`
+        );
+
+      if (target) {
+        target.hidden = !toggle.checked;
+      }
+    });
+
+  updateActiveFilterChips();
+}
+
+function updateActiveFilterChips() {
+  const chips = [];
+
+  if ($('fText').value.trim()) {
+    chips.push(`Buscar: ${$('fText').value.trim()}`);
+  }
+
+  if ($('fType').value) {
+    chips.push(
+      $('fType').selectedOptions[0]?.textContent || 'Tipo'
+    );
+  }
+
+  if ($('fOperation').value) {
+    chips.push(
+      $('fOperation').selectedOptions[0]?.textContent || 'Operación'
+    );
+  }
+
+  if ($('fDepartment').value) {
+    chips.push(
+      $('fDepartment').selectedOptions[0]?.textContent || 'Departamento'
+    );
+  }
+
+  if ($('fMax').value) {
+    chips.push(`Hasta ${$('fMax').value}`);
+  }
+
+  const optional = {
+    agent: 'fAgent',
+    municipality: 'fMunicipality',
+    zone: 'fZone',
+    currency: 'fCurrency',
+    minprice: 'fMin',
+    sort: 'fSort'
+  };
+
+  Object.entries(optional).forEach(([name,id]) => {
+    if (!isFilterOn(name)) return;
+
+    const el = $(id);
+    if (!el || !el.value) return;
+
+    if (el.tagName === 'SELECT') {
+      chips.push(
+        el.selectedOptions[0]?.textContent || name
+      );
+    } else {
+      chips.push(
+        `${name === 'minprice' ? 'Desde' : name}: ${el.value}`
+      );
+    }
+  });
+
+  const container = $('activeFilterChips');
+
+  container.innerHTML =
+    chips.map(
+      text =>
+        `<span class="active-filter-chip">
+          ${esc(text)}
+        </span>`
+    ).join('');
+
+  container.hidden = !chips.length;
+}
+
 function clearFilters() {
-  ['fText','fMin','fMax'].forEach(id => $(id).value = '');
-  ['fType','fOperation','fAgent','fDepartment','fCurrency','fSort'].forEach(id => $(id).value = id === 'fSort' ? 'recent' : '');
-  $('fMunicipality').innerHTML = '<option value="">Cualquier municipio</option>';
-  $('fMunicipality').disabled = true;
-  $('fZone').innerHTML = '<option value="">Cualquier zona</option>';
-  $('fZone').disabled = true;
-  document.querySelectorAll('[data-dynamic-filter]').forEach(el => el.value = '');
+  $('fText').value = '';
+  $('fType').value = '';
+  $('fOperation').value = '';
+  $('fDepartment').value = '';
+  $('fMax').value = '';
+
+  $('fAgent').value = '';
+  $('fCurrency').value = '';
+  $('fMin').value = '';
+  $('fSort').value = 'recent';
+
+  $('fMunicipality').innerHTML =
+    '<option value="">Cualquier municipio</option>';
+
+  $('fMunicipality').disabled =
+    true;
+
+  $('fZone').innerHTML =
+    '<option value="">Cualquier zona</option>';
+
+  $('fZone').disabled =
+    true;
+
+  document
+    .querySelectorAll('[data-dynamic-filter]')
+    .forEach(el => el.value = '');
+
+  document
+    .querySelectorAll('[data-filter-toggle]')
+    .forEach(el => el.checked = false);
+
+  updateOptionalFilters();
   render();
 }
 
-['fText','fType','fOperation','fAgent','fCurrency','fMin','fMax','fSort'].forEach(id => {
-  $(id).addEventListener('input', render);
-  $(id).addEventListener('change', render);
-});
-
-$('fDepartment').addEventListener('change', () => loadMunicipalities($('fDepartment').value).catch(showError));
-$('fMunicipality').addEventListener('change', () => loadZones($('fMunicipality').value).catch(showError));
-$('fZone').addEventListener('change', render);
-$('clearFilters').addEventListener('click', clearFilters);
-$('emptyClear').addEventListener('click', clearFilters);
-
 function showError(error) {
   console.error(error);
-  $('catalogStatus').style.display = 'block';
-  $('catalogStatus').innerHTML = `<div class="status-card status-error"><strong>No se pudieron cargar los datos.</strong><span>${esc(error.message || '')}</span></div>`;
+
+  $('catalogStatus').hidden = false;
+
+  $('catalogStatus').innerHTML = `
+    <div class="status-card status-error">
+      <strong>No se pudieron cargar los datos.</strong>
+      <span>${esc(error.message || '')}</span>
+    </div>`;
 }
+
+['fText','fType','fOperation','fDepartment','fMax',
+ 'fAgent','fCurrency','fMin','fSort']
+.forEach(id => {
+  const el = $(id);
+
+  el.addEventListener('input', render);
+  el.addEventListener('change', render);
+});
+
+$('fDepartment').addEventListener(
+  'change',
+  () => {
+    loadMunicipalities(
+      $('fDepartment').value
+    ).catch(showError);
+  }
+);
+
+$('fMunicipality').addEventListener(
+  'change',
+  () => {
+    loadZones(
+      $('fMunicipality').value
+    ).catch(showError);
+  }
+);
+
+$('fZone').addEventListener(
+  'change',
+  render
+);
+
+$('moreFiltersBtn').addEventListener(
+  'click',
+  () => {
+    $('advancedFiltersPanel').hidden =
+      !$('advancedFiltersPanel').hidden;
+
+    $('moreFiltersBtn').textContent =
+      $('advancedFiltersPanel').hidden
+        ? '+ Más filtros'
+        : '− Menos filtros';
+  }
+);
+
+$('closeAdvancedFilters').addEventListener(
+  'click',
+  () => {
+    $('advancedFiltersPanel').hidden = true;
+    $('moreFiltersBtn').textContent = '+ Más filtros';
+  }
+);
+
+document
+  .querySelectorAll('[data-filter-toggle]')
+  .forEach(toggle => {
+    toggle.addEventListener(
+      'change',
+      () => {
+        updateOptionalFilters();
+        render();
+      }
+    );
+  });
+
+$('clearFilters').addEventListener(
+  'click',
+  clearFilters
+);
+
+$('emptyClear').addEventListener(
+  'click',
+  clearFilters
+);
 
 try {
   initSupabase();
+  updateOptionalFilters();
   bootstrap().catch(showError);
 } catch (error) {
   showError(error);
