@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alquileres Carpe Diem — Propiedades disponibles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <div class="brand-mark">CD</div>
+      <div class="brand-text">
+        <h1 id="brandName">Alquileres Carpe Diem</h1>
+        <span>Propiedades seleccionadas</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="admin.html">Acceso agente</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h2>Encuentra tu próximo hogar</h2>
+    <p>Catálogo actualizado de propiedades disponibles para renta y venta.</p>
+  </div>
+</section>
+
+<div class="container">
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="todas">Todas</button>
+    <button class="filter-btn" data-filter="renta">En renta</button>
+    <button class="filter-btn" data-filter="venta">En venta</button>
+  </div>
+</div>
+
+<section class="catalog">
+  <div class="container">
+    <div class="grid" id="grid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <p>No hay propiedades disponibles en esta categoría por el momento.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p id="footerText">Alquileres Carpe Diem — Todas las propiedades sujetas a disponibilidad.</p>
+  </div>
+</footer>
+
+<div id="modalRoot"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+document.getElementById('brandName').textContent = CONTACTO.nombreNegocio;
+document.getElementById('footerText').textContent = `${CONTACTO.nombreNegocio} — Todas las propiedades sujetas a disponibilidad.`;
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let allProperties = [];
+let currentFilter = 'todas';
+
+const grid = document.getElementById('grid');
+const emptyState = document.getElementById('emptyState');
+const modalRoot = document.getElementById('modalRoot');
+
+function formatPrice(price, currency) {
+  const num = Number(price).toLocaleString('es-GT');
+  return `${currency || 'Q'} ${num}`;
+}
+
+function renderGrid() {
+  const filtered = currentFilter === 'todas'
+    ? allProperties
+    : allProperties.filter(p => p.tipo === currentFilter);
+
+  grid.innerHTML = '';
+  emptyState.style.display = filtered.length === 0 ? 'block' : 'none';
+
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const mainPhoto = (p.fotos && p.fotos[0]) || '';
+    card.innerHTML = `
+      <div class="card-img" style="background-image:url('${mainPhoto}')">
+        <div class="card-price-tag">${formatPrice(p.precio, p.moneda)}${p.tipo === 'renta' ? '/mes' : ''}</div>
+      </div>
+      <div class="card-body">
+        <h3>${p.titulo || 'Propiedad'}</h3>
+        <div class="card-loc">📍 ${p.ubicacion || ''}</div>
+        <div class="card-specs">
+          <span><strong>${p.habitaciones ?? '—'}</strong> hab.</span>
+          <span><strong>${p.banos ?? '—'}</strong> baños</span>
+          <span><strong>${p.metros ?? '—'}</strong> m²</span>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', () => openModal(p));
+    grid.appendChild(card);
+  });
+}
+
+function openModal(p) {
+  const fotos = (p.fotos && p.fotos.length) ? p.fotos : [''];
+  const galleryHtml = fotos.map(f => `<img src="${f}" alt="${p.titulo || ''}">`).join('');
+
+  const waMsg = encodeURIComponent(`Hola, me interesa la propiedad "${p.titulo}" (${formatPrice(p.precio, p.moneda)}). ¿Podrían darme más información?`);
+  const waLink = `https://wa.me/${CONTACTO.whatsapp}?text=${waMsg}`;
+  const mailLink = `mailto:${CONTACTO.correo}?subject=${encodeURIComponent('Interés en propiedad: ' + p.titulo)}`;
+
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal-close"><button id="modalCloseBtn">✕</button></div>
+        <div class="modal-gallery">${galleryHtml}</div>
+        <div class="modal-body">
+          <h2>${p.titulo || 'Propiedad'}</h2>
+          <div class="modal-price">${formatPrice(p.precio, p.moneda)}${p.tipo === 'renta' ? ' / mes' : ''}</div>
+          <div class="modal-specs">
+            <div class="spec-item"><strong>${p.habitaciones ?? '—'}</strong><span>Habitaciones</span></div>
+            <div class="spec-item"><strong>${p.banos ?? '—'}</strong><span>Baños</span></div>
+            <div class="spec-item"><strong>${p.metros ?? '—'}</strong><span>m² construcción</span></div>
+            <div class="spec-item"><strong>${p.parqueos ?? '—'}</strong><span>Parqueos</span></div>
+          </div>
+          <p class="modal-desc">${p.descripcion || ''}</p>
+          <div class="contact-actions">
+            <a class="btn btn-whatsapp" href="${waLink}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>
+            <a class="btn btn-email" href="${mailLink}">✉️ Escribir por correo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modalOverlay') closeModal();
+  });
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+}
+
+function closeModal() {
+  modalRoot.innerHTML = '';
+}
+
+document.getElementById('filters').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('filter-btn')) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentFilter = e.target.dataset.filter;
+  renderGrid();
+});
+
+async function loadProperties() {
+  const { data, error } = await supabase
+    .from('propiedades')
+    .select('*')
+    .eq('disponible', true)
+    .order('creado', { ascending: false });
+
+  if (error) {
+    console.error('Error cargando propiedades:', error);
+    grid.innerHTML = '<p style="color:#a89e88;grid-column:1/-1;text-align:center;padding:40px;">No se pudieron cargar las propiedades. Verifica la configuración de Supabase.</p>';
+    return;
+  }
+  allProperties = data;
+  renderGrid();
+}
+
+loadProperties();
+
+// Se actualiza en tiempo real cuando el agente publica o cambia algo
+supabase
+  .channel('propiedades-cambios')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'propiedades' }, () => {
+    loadProperties();
+  })
+  .subscribe();
+</script>
+
+</body>
+</html>
