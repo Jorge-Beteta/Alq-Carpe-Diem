@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de administración — Alquileres Carpe Diem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <div class="brand-mark">CD</div>
+      <div class="brand-text">
+        <h1>Panel del agente</h1>
+        <span id="brandSub">Alquileres Carpe Diem</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="index.html">Ver sitio público</a>
+      <a href="#" id="logoutLink" style="display:none;">Cerrar sesión</a>
+    </div>
+  </div>
+</header>
+
+<!-- Pantalla de login -->
+<div class="login-shell" id="loginShell">
+  <div class="admin-card">
+    <h2>Iniciar sesión</h2>
+    <div class="field">
+      <label>Correo</label>
+      <input type="email" id="loginEmail" placeholder="tu@correo.com">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" id="loginBtn">Entrar</button>
+    <p class="status-msg" id="loginStatus"></p>
+  </div>
+</div>
+
+<!-- Panel principal (oculto hasta iniciar sesión) -->
+<div class="admin-shell" id="adminShell" style="display:none;">
+
+  <div class="admin-card">
+    <h2>Agregar propiedad</h2>
+    <form id="propertyForm">
+      <div class="field">
+        <label>Título</label>
+        <input type="text" id="f-titulo" placeholder="Casa en Zona 15, 3 habitaciones" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="f-tipo">
+            <option value="renta">En renta</option>
+            <option value="venta">En venta</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Precio</label>
+          <input type="number" id="f-precio" placeholder="185000" required>
+        </div>
+        <div class="field">
+          <label>Moneda</label>
+          <select id="f-moneda">
+            <option value="Q">Quetzales (Q)</option>
+            <option value="$">Dólares ($)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Ubicación</label>
+        <input type="text" id="f-ubicacion" placeholder="Zona 15, Ciudad de Guatemala" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Habitaciones</label>
+          <input type="number" id="f-habitaciones" placeholder="3">
+        </div>
+        <div class="field">
+          <label>Baños</label>
+          <input type="number" id="f-banos" placeholder="2.5" step="0.5">
+        </div>
+        <div class="field">
+          <label>m² construcción</label>
+          <input type="number" id="f-metros" placeholder="180">
+        </div>
+        <div class="field">
+          <label>Parqueos</label>
+          <input type="number" id="f-parqueos" placeholder="2">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descripción</label>
+        <textarea id="f-descripcion" placeholder="Jardín privado, cochera, seguridad 24/7..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Fotos</label>
+        <div class="photo-drop" id="photoDrop">
+          Haz clic para elegir fotos (puedes seleccionar varias)
+        </div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+        <div class="photo-preview-grid" id="photoPreview"></div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">Publicar propiedad</button>
+      <p class="status-msg" id="formStatus"></p>
+    </form>
+  </div>
+
+  <div class="admin-card">
+    <h2>Propiedades publicadas</h2>
+    <div id="propertyList"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+document.getElementById('brandSub').textContent = CONTACTO.nombreNegocio;
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const loginShell = document.getElementById('loginShell');
+const adminShell = document.getElementById('adminShell');
+const logoutLink = document.getElementById('logoutLink');
+
+// --- Login ---
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const statusEl = document.getElementById('loginStatus');
+  statusEl.textContent = '';
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    statusEl.textContent = 'Correo o contraseña incorrectos.';
+    statusEl.className = 'status-msg error';
+  } else {
+    showAdmin();
+    loadPropertyList();
+  }
+});
+
+logoutLink.addEventListener('click', async (e) => {
+  e.preventDefault();
+  await supabase.auth.signOut();
+  showLogin();
+});
+
+function showAdmin() {
+  loginShell.style.display = 'none';
+  adminShell.style.display = 'block';
+  logoutLink.style.display = 'inline';
+}
+
+function showLogin() {
+  loginShell.style.display = 'block';
+  adminShell.style.display = 'none';
+  logoutLink.style.display = 'none';
+}
+
+// Revisa si ya hay una sesión activa al cargar la página
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    showAdmin();
+    loadPropertyList();
+  } else {
+    showLogin();
+  }
+})();
+
+// --- Manejo de fotos seleccionadas ---
+let selectedFiles = [];
+const photoDrop = document.getElementById('photoDrop');
+const photoInput = document.getElementById('photoInput');
+const photoPreview = document.getElementById('photoPreview');
+
+photoDrop.addEventListener('click', () => photoInput.click());
+photoInput.addEventListener('change', () => {
+  selectedFiles = Array.from(photoInput.files);
+  photoPreview.innerHTML = '';
+  selectedFiles.forEach(file => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    photoPreview.appendChild(img);
+  });
+});
+
+// --- Publicar propiedad ---
+document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('formStatus');
+  submitBtn.disabled = true;
+  statusEl.textContent = 'Subiendo fotos...';
+  statusEl.className = 'status-msg';
+
+  try {
+    // Sube cada foto al bucket de Storage y obtiene su URL pública
+    const fotoUrls = [];
+    for (const file of selectedFiles) {
+      const path = `propiedades/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('property-photos')
+        .upload(path, file);
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('property-photos')
+        .getPublicUrl(path);
+      fotoUrls.push(urlData.publicUrl);
+    }
+
+    statusEl.textContent = 'Guardando propiedad...';
+
+    const { error: insertError } = await supabase.from('propiedades').insert({
+      titulo: document.getElementById('f-titulo').value,
+      tipo: document.getElementById('f-tipo').value,
+      precio: Number(document.getElementById('f-precio').value),
+      moneda: document.getElementById('f-moneda').value,
+      ubicacion: document.getElementById('f-ubicacion').value,
+      habitaciones: Number(document.getElementById('f-habitaciones').value) || null,
+      banos: Number(document.getElementById('f-banos').value) || null,
+      metros: Number(document.getElementById('f-metros').value) || null,
+      parqueos: Number(document.getElementById('f-parqueos').value) || null,
+      descripcion: document.getElementById('f-descripcion').value,
+      fotos: fotoUrls,
+      disponible: true
+    });
+    if (insertError) throw insertError;
+
+    statusEl.textContent = '✓ Propiedad publicada correctamente.';
+    statusEl.className = 'status-msg success';
+    document.getElementById('propertyForm').reset();
+    selectedFiles = [];
+    photoPreview.innerHTML = '';
+    loadPropertyList();
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'Ocurrió un error al publicar. Intenta de nuevo.';
+    statusEl.className = 'status-msg error';
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+// --- Lista de propiedades publicadas ---
+const propertyList = document.getElementById('propertyList');
+
+async function loadPropertyList() {
+  const { data, error } = await supabase
+    .from('propiedades')
+    .select('*')
+    .order('creado', { ascending: false });
+
+  if (error) {
+    propertyList.innerHTML = '<p style="color:#c2685f;font-size:0.85rem;">Error cargando propiedades.</p>';
+    return;
+  }
+
+  if (!data.length) {
+    propertyList.innerHTML = '<p style="color:#a89e88;font-size:0.85rem;">Todavía no has publicado propiedades.</p>';
+    return;
+  }
+
+  propertyList.innerHTML = '';
+  data.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'property-row';
+    row.innerHTML = `
+      <img src="${(p.fotos && p.fotos[0]) || ''}" alt="">
+      <div class="pr-info">
+        <h4>${p.titulo || 'Sin título'}</h4>
+        <span>${p.ubicacion || ''} · ${p.moneda || 'Q'} ${Number(p.precio).toLocaleString('es-GT')}</span>
+      </div>
+      <div class="pr-actions">
+        <span class="badge-toggle ${p.disponible ? 'available' : 'unavailable'}" data-id="${p.id}" data-current="${p.disponible}">
+          ${p.disponible ? 'Disponible' : 'No disponible'}
+        </span>
+        <button class="icon-btn" data-delete="${p.id}" title="Eliminar">🗑</button>
+      </div>
+    `;
+    propertyList.appendChild(row);
+  });
+}
+
+propertyList.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('badge-toggle')) {
+    const id = e.target.dataset.id;
+    const current = e.target.dataset.current === 'true';
+    await supabase.from('propiedades').update({ disponible: !current }).eq('id', id);
+    loadPropertyList();
+  }
+  if (e.target.dataset.delete) {
+    if (confirm('¿Eliminar esta propiedad permanentemente?')) {
+      await supabase.from('propiedades').delete().eq('id', e.target.dataset.delete);
+      loadPropertyList();
+    }
+  }
+});
+</script>
+
+</body>
+</html>
