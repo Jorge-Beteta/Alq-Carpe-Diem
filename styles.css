@@ -29,7 +29,7 @@ a{color:inherit}
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .header-inner{min-height:82px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;align-items:center;gap:14px;text-decoration:none;min-width:0}
-.brand-logo{width:120px;height:68px;object-fit:contain;flex:0 0 auto}
+.brand-logo{width:240px;height:136px;object-fit:contain;flex:0 0 auto}
 .brand-text h1{margin:0;font-family:"Playfair Display",serif;font-size:1.24rem;line-height:1.15}
 .brand-text span{display:block;margin-top:3px;color:var(--muted);font-size:.82rem}
 .header-actions{display:flex;align-items:center;gap:18px}
