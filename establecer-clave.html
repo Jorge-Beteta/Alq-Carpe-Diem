@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Crear contraseña — Alquileres Carpe Diem</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="admin-page">
+
+<header class="site-header">
+  <div class="container header-inner">
+
+    <a class="brand" href="index.html">
+
+      <img
+        src="logo.png"
+        alt="Alquileres Carpe Diem"
+        class="brand-logo"
+      >
+
+      <div class="brand-text">
+        <h1>Alquileres Carpe Diem</h1>
+        <span>Configuración de cuenta</span>
+      </div>
+
+    </a>
+
+  </div>
+</header>
+
+
+<main>
+
+  <section class="login-shell">
+
+    <div class="admin-card login-card">
+
+      <span class="eyebrow">
+        Bienvenido
+      </span>
+
+      <h2>
+        Crea tu contraseña
+      </h2>
+
+      <p class="muted">
+        Define la contraseña que utilizarás para ingresar
+        al panel de propiedades.
+      </p>
+
+
+      <form id="passwordForm">
+
+        <div class="field">
+
+          <label for="password">
+            Nueva contraseña
+          </label>
+
+          <input
+            id="password"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          >
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="passwordConfirm">
+            Confirmar contraseña
+          </label>
+
+          <input
+            id="passwordConfirm"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          >
+
+        </div>
+
+
+        <button
+          id="savePasswordBtn"
+          type="submit"
+          class="btn btn-primary btn-full"
+        >
+          Guardar contraseña
+        </button>
+
+
+        <p
+          id="status"
+          class="status-msg"
+        ></p>
+
+      </form>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase-config.js"></script>
+
+
+<script>
+
+const statusEl =
+  document.getElementById('status');
+
+const saveButton =
+  document.getElementById('savePasswordBtn');
+
+
+let supabaseClient = null;
+
+
+try {
+
+  if (
+    !window.supabase ||
+    !window.supabase.createClient
+  ) {
+    throw new Error(
+      'No se pudo cargar Supabase.'
+    );
+  }
+
+
+  supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+
+} catch (error) {
+
+  statusEl.textContent =
+    error.message;
+
+  statusEl.className =
+    'status-msg error';
+
+  saveButton.disabled =
+    true;
+
+}
+
+
+/*
+ * Comprobar que el enlace de invitación
+ * haya creado una sesión válida.
+ */
+
+async function verificarSesion() {
+
+  if (!supabaseClient) {
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (error) {
+
+    statusEl.textContent =
+      error.message;
+
+    statusEl.className =
+      'status-msg error';
+
+    return;
+
+  }
+
+
+  if (
+    !data ||
+    !data.session
+  ) {
+
+    statusEl.textContent =
+      'Este enlace no contiene una sesión válida o ya expiró.';
+
+    statusEl.className =
+      'status-msg error';
+
+    saveButton.disabled =
+      true;
+
+  }
+
+}
+
+
+verificarSesion();
+
+
+
+document
+  .getElementById('passwordForm')
+  .addEventListener(
+    'submit',
+    async event => {
+
+      event.preventDefault();
+
+
+      const password =
+        document
+          .getElementById('password')
+          .value;
+
+
+      const confirmation =
+        document
+          .getElementById('passwordConfirm')
+          .value;
+
+
+      if (
+        password.length < 8
+      ) {
+
+        statusEl.textContent =
+          'La contraseña debe tener por lo menos 8 caracteres.';
+
+        statusEl.className =
+          'status-msg error';
+
+        return;
+
+      }
+
+
+      if (
+        password !== confirmation
+      ) {
+
+        statusEl.textContent =
+          'Las contraseñas no coinciden.';
+
+        statusEl.className =
+          'status-msg error';
+
+        return;
+
+      }
+
+
+      saveButton.disabled =
+        true;
+
+      saveButton.textContent =
+        'Guardando…';
+
+
+      statusEl.textContent =
+        'Actualizando contraseña…';
+
+      statusEl.className =
+        'status-msg';
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient.auth.updateUser({
+            password
+          });
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        statusEl.textContent =
+          '✓ Contraseña creada correctamente. Redirigiendo…';
+
+        statusEl.className =
+          'status-msg success';
+
+
+        setTimeout(
+          () => {
+
+            window.location.href =
+              'admin.html';
+
+          },
+          1200
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        statusEl.textContent =
+          error.message ||
+          'No fue posible guardar la contraseña.';
+
+        statusEl.className =
+          'status-msg error';
+
+
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          'Guardar contraseña';
+
+      }
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
