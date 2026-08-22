@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de administración — Alquileres Carpe Diem</title>
+  <meta name="robots" content="noindex,nofollow">
+  <title>Administración — Alquileres Carpe Diem</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,702 +14,1623 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="admin-page">
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="index.html" aria-label="Volver al sitio">
-        <img
-          src="logo.png"
-          alt="Alquileres Carpe Diem"
-          class="brand-logo"
-          onerror="this.style.display='none'; document.getElementById('brandFallback').style.display='grid';"
-        >
-        <div id="brandFallback" class="brand-fallback" style="display:none;">CD</div>
-
-        <div class="brand-text">
-          <h1>Panel del agente</h1>
-          <span id="brandSub">Alquileres Carpe Diem</span>
-        </div>
-      </a>
-
-      <div class="header-actions">
-        <a class="header-link" href="index.html">Ver sitio público</a>
-        <a class="header-link" href="#" id="logoutLink" style="display:none;">Cerrar sesión</a>
+<body class="admin-v3">
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">
+      <img src="logo.png" alt="Alquileres Carpe Diem" class="brand-logo">
+      <div class="brand-text">
+        <h1 id="headerTitle">Panel de administración</h1>
+        <span id="headerSubtitle">Alquileres Carpe Diem</span>
       </div>
+    </a>
+
+    <div class="header-actions">
+      <a class="header-link" href="index.html">Ver sitio público</a>
+      <button id="logoutBtn" class="link-button" type="button" style="display:none;">Cerrar sesión</button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <section id="loginShell" class="login-shell">
-      <div class="admin-card login-card">
-        <span class="eyebrow">Administración</span>
-        <h2>Iniciar sesión</h2>
-        <p class="muted">Ingresa con el usuario autorizado de Supabase.</p>
+<main>
+  <!-- LOGIN -->
+  <section id="loginView" class="login-shell">
+    <div class="admin-card login-card">
+      <span class="eyebrow">Acceso privado</span>
+      <h2>Iniciar sesión</h2>
+      <p class="muted">Ingresa con tu cuenta de agente o administrador.</p>
 
-        <form id="loginForm">
-          <div class="field">
-            <label for="loginEmail">Correo</label>
-            <input id="loginEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Correo</label>
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Contraseña</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </div>
+
+        <button id="loginBtn" class="btn btn-primary btn-full" type="submit">Entrar</button>
+        <p id="loginStatus" class="status-msg"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <section id="appView" class="admin-app" style="display:none;">
+    <div class="container app-shell">
+      <aside class="admin-sidebar">
+        <div class="profile-mini">
+          <div class="profile-avatar" id="profileAvatar">A</div>
+          <div>
+            <strong id="profileName">Agente</strong>
+            <span id="profileRole">Agente</span>
+          </div>
+        </div>
+
+        <nav id="adminNav" class="admin-nav">
+          <button class="nav-item active" data-view="dashboard">Resumen</button>
+          <button class="nav-item" data-view="properties" id="navProperties">Mis propiedades</button>
+          <button class="nav-item admin-only" data-view="agents" style="display:none;">Agentes</button>
+          <button class="nav-item admin-only" data-view="features" style="display:none;">Características</button>
+          <button class="nav-item admin-only" data-view="types" style="display:none;">Tipos de inmueble</button>
+          <button class="nav-item admin-only" data-view="locations" style="display:none;">Ubicaciones</button>
+          <button class="nav-item" data-view="profile">Mi perfil</button>
+        </nav>
+      </aside>
+
+      <div class="admin-main">
+        <div id="globalStatus" class="global-status" style="display:none;"></div>
+
+        <!-- DASHBOARD -->
+        <section class="admin-view active" id="view-dashboard">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Resumen</span>
+              <h2>Panel principal</h2>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="loginPassword">Contraseña</label>
-            <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
+          <div class="stats-grid">
+            <article class="stat-card">
+              <span>Propiedades</span>
+              <strong id="statTotal">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>Publicadas</span>
+              <strong id="statPublished">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>Borradores</span>
+              <strong id="statDrafts">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>Disponibles</span>
+              <strong id="statAvailable">0</strong>
+            </article>
           </div>
 
-          <button id="loginBtn" class="btn btn-primary btn-full" type="submit">Entrar</button>
-          <p id="loginStatus" class="status-msg"></p>
-        </form>
-      </div>
-    </section>
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Actividad</span>
+                <h3>Propiedades recientes</h3>
+              </div>
+              <button class="btn btn-secondary btn-small" type="button" data-go="properties">Ver propiedades</button>
+            </div>
+            <div id="recentProperties" class="property-list"></div>
+          </div>
+        </section>
 
-    <section id="adminShell" class="admin-shell" style="display:none;">
-      <div class="container admin-layout">
-        <div class="admin-card">
-          <div class="admin-card-header">
+        <!-- PROPERTIES -->
+        <section class="admin-view" id="view-properties">
+          <div class="page-heading">
             <div>
               <span class="eyebrow">Catálogo</span>
-              <h2 id="formTitle">Agregar propiedad</h2>
+              <h2 id="propertiesHeading">Mis propiedades</h2>
             </div>
-            <button id="cancelEditBtn" class="btn btn-secondary btn-small" type="button" style="display:none;">Cancelar edición</button>
+            <button id="newPropertyBtn" class="btn btn-primary" type="button">+ Nueva propiedad</button>
           </div>
 
-          <form id="propertyForm">
-            <div class="field">
-              <label for="f-titulo">Título</label>
-              <input id="f-titulo" type="text" placeholder="Casa en Zona 15, 3 habitaciones" required>
+          <div class="admin-card filter-card">
+            <div class="compact-filters">
+              <input id="propertySearch" type="search" placeholder="Buscar por título">
+              <select id="propertyStatusFilter">
+                <option value="">Todos los estados</option>
+                <option value="published">Publicadas</option>
+                <option value="draft">Borradores</option>
+                <option value="available">Disponibles</option>
+                <option value="unavailable">No disponibles</option>
+              </select>
+              <select id="propertyAgentFilter" class="admin-only" style="display:none;">
+                <option value="">Todos los agentes</option>
+              </select>
+              <button id="refreshPropertiesBtn" class="btn btn-secondary btn-small" type="button">Actualizar</button>
+            </div>
+          </div>
+
+          <div id="propertyEditor" class="admin-card" style="display:none;">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow" id="propertyEditorEyebrow">Nueva propiedad</span>
+                <h3 id="propertyEditorTitle">Crear propiedad</h3>
+              </div>
+              <button id="cancelPropertyBtn" class="btn btn-secondary btn-small" type="button">Cerrar</button>
             </div>
 
-            <div class="field-row three">
+            <form id="propertyForm">
+              <input id="propertyId" type="hidden">
+
+              <div class="section-title">Información general</div>
+
               <div class="field">
-                <label for="f-tipo">Tipo</label>
-                <select id="f-tipo">
-                  <option value="renta">En renta</option>
-                  <option value="venta">En venta</option>
-                </select>
+                <label for="pTitle">Título *</label>
+                <input id="pTitle" type="text" required placeholder="Ej. Casa en renta en Zona 15">
+              </div>
+
+              <div class="field-row three">
+                <div class="field">
+                  <label for="pType">Tipo de inmueble *</label>
+                  <select id="pType" required></select>
+                </div>
+
+                <div class="field">
+                  <label for="pOperation">Operación *</label>
+                  <select id="pOperation" required>
+                    <option value="renta">Renta</option>
+                    <option value="venta">Venta</option>
+                  </select>
+                </div>
+
+                <div class="field admin-only" id="agentField" style="display:none;">
+                  <label for="pAgent">Agente *</label>
+                  <select id="pAgent"></select>
+                </div>
+              </div>
+
+              <div class="field-row two">
+                <div class="field">
+                  <label for="pCurrency">Moneda *</label>
+                  <select id="pCurrency" required>
+                    <option value="GTQ">Quetzales (GTQ)</option>
+                    <option value="USD">Dólares (USD)</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="pPrice">Precio *</label>
+                  <input id="pPrice" type="number" min="0" step="0.01" required>
+                </div>
+              </div>
+
+              <div class="section-title">Ubicación</div>
+
+              <div class="field-row three">
+                <div class="field">
+                  <label for="pDepartment">Departamento *</label>
+                  <select id="pDepartment" required></select>
+                </div>
+
+                <div class="field">
+                  <label for="pMunicipality">Municipio *</label>
+                  <select id="pMunicipality" required disabled></select>
+                </div>
+
+                <div class="field">
+                  <label for="pZone">Zona *</label>
+                  <select id="pZone" required disabled></select>
+                </div>
               </div>
 
               <div class="field">
-                <label for="f-precio">Precio</label>
-                <input id="f-precio" type="number" min="0" step="0.01" placeholder="185000" required>
+                <label for="pReference">Dirección / referencia</label>
+                <input id="pReference" type="text" placeholder="Referencia general; evita datos sensibles si no deben ser públicos">
               </div>
 
               <div class="field">
-                <label for="f-moneda">Moneda</label>
-                <select id="f-moneda">
-                  <option value="Q">Quetzales (Q)</option>
-                  <option value="$">Dólares ($)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="f-ubicacion">Ubicación</label>
-              <input id="f-ubicacion" type="text" placeholder="Zona 15, Ciudad de Guatemala" required>
-            </div>
-
-            <div class="field-row four">
-              <div class="field">
-                <label for="f-habitaciones">Habitaciones</label>
-                <input id="f-habitaciones" type="number" min="0" step="1" placeholder="3">
+                <label for="pDescription">Descripción</label>
+                <textarea id="pDescription" rows="6"></textarea>
               </div>
 
-              <div class="field">
-                <label for="f-banos">Baños</label>
-                <input id="f-banos" type="number" min="0" step="0.5" placeholder="2.5">
+              <div class="section-title">Características requeridas</div>
+              <div id="requiredFeatures" class="dynamic-features">
+                <p class="muted">Selecciona el tipo de inmueble.</p>
               </div>
 
-              <div class="field">
-                <label for="f-metros">m² construcción</label>
-                <input id="f-metros" type="number" min="0" step="1" placeholder="180">
+              <div class="section-title-row">
+                <div class="section-title">Características adicionales</div>
+                <button id="addFeatureBtn" class="btn btn-secondary btn-small" type="button">+ Agregar</button>
               </div>
+              <div id="extraFeatures" class="dynamic-features"></div>
 
-              <div class="field">
-                <label for="f-parqueos">Parqueos</label>
-                <input id="f-parqueos" type="number" min="0" step="1" placeholder="2">
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="f-descripcion">Descripción</label>
-              <textarea id="f-descripcion" rows="6" placeholder="Amenidades, distribución, seguridad, acabados, condiciones relevantes…"></textarea>
-            </div>
-
-            <div class="field">
-              <label>Fotografías</label>
+              <div class="section-title">Fotografías</div>
 
               <button id="photoDrop" class="photo-drop" type="button">
                 <strong>Seleccionar fotografías</strong>
-                <span>Puedes elegir varias imágenes a la vez.</span>
+                <span>Puedes elegir varias imágenes.</span>
               </button>
-
               <input id="photoInput" type="file" accept="image/*" multiple hidden>
 
               <div id="existingPhotosBlock" style="display:none;">
-                <p class="field-help">Fotografías actuales (se conservarán al editar):</p>
-                <div id="existingPhotoPreview" class="photo-preview-grid"></div>
+                <p class="field-help">Fotografías actuales</p>
+                <div id="existingPhotos" class="photo-preview-grid"></div>
               </div>
 
               <div id="newPhotosBlock" style="display:none;">
-                <p class="field-help">Nuevas fotografías:</p>
-                <div id="photoPreview" class="photo-preview-grid"></div>
+                <p class="field-help">Nuevas fotografías</p>
+                <div id="newPhotos" class="photo-preview-grid"></div>
               </div>
-            </div>
 
-            <div class="form-actions">
-              <button id="submitBtn" class="btn btn-primary" type="submit">Publicar propiedad</button>
-              <span id="formStatus" class="status-msg"></span>
-            </div>
-          </form>
-        </div>
+              <div class="publish-row">
+                <label class="check-line">
+                  <input id="pAvailable" type="checkbox" checked>
+                  Disponible
+                </label>
+              </div>
 
-        <div class="admin-card">
-          <div class="admin-card-header">
+              <div class="form-actions">
+                <button id="saveDraftBtn" class="btn btn-secondary" type="button">Guardar borrador</button>
+                <button id="publishBtn" class="btn btn-primary" type="submit">Guardar y publicar</button>
+                <span id="propertyStatus" class="status-msg"></span>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div id="propertyList" class="property-list"></div>
+          </div>
+        </section>
+
+        <!-- AGENTS -->
+        <section class="admin-view admin-only-view" id="view-agents">
+          <div class="page-heading">
             <div>
-              <span class="eyebrow">Publicaciones</span>
-              <h2>Propiedades publicadas</h2>
+              <span class="eyebrow">Equipo</span>
+              <h2>Agentes</h2>
             </div>
-            <button id="refreshListBtn" class="btn btn-secondary btn-small" type="button">Actualizar</button>
+            <button id="newAgentBtn" class="btn btn-primary" type="button">+ Nuevo agente</button>
           </div>
 
-          <div id="propertyList" class="property-list">
-            <p class="muted">Cargando propiedades…</p>
+          <div id="agentEditor" class="admin-card" style="display:none;">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Nuevo usuario</span>
+                <h3>Invitar agente</h3>
+              </div>
+              <button id="cancelAgentBtn" class="btn btn-secondary btn-small" type="button">Cerrar</button>
+            </div>
+
+            <form id="agentForm">
+              <div class="field-row two">
+                <div class="field">
+                  <label for="aName">Nombre *</label>
+                  <input id="aName" required>
+                </div>
+                <div class="field">
+                  <label for="aSurname">Apellido</label>
+                  <input id="aSurname">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="aEmail">Correo *</label>
+                <input id="aEmail" type="email" required>
+              </div>
+
+              <div class="field-row two">
+                <div class="field">
+                  <label for="aPhone">Teléfono</label>
+                  <input id="aPhone">
+                </div>
+                <div class="field">
+                  <label for="aWhatsapp">WhatsApp</label>
+                  <input id="aWhatsapp" placeholder="502XXXXXXXX">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="aBio">Biografía</label>
+                <textarea id="aBio" rows="4"></textarea>
+              </div>
+
+              <button id="createAgentBtn" class="btn btn-primary" type="submit">Crear e invitar agente</button>
+              <span id="agentStatus" class="status-msg"></span>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div id="agentList" class="agent-list"></div>
+          </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section class="admin-view admin-only-view" id="view-features">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Maestro</span>
+              <h2>Características</h2>
+            </div>
+            <button id="newFeatureMasterBtn" class="btn btn-primary" type="button">+ Nueva característica</button>
+          </div>
+
+          <div id="featureMasterEditor" class="admin-card" style="display:none;">
+            <form id="featureMasterForm">
+              <input id="fmId" type="hidden">
+
+              <div class="field-row two">
+                <div class="field">
+                  <label for="fmName">Nombre *</label>
+                  <input id="fmName" required>
+                </div>
+                <div class="field">
+                  <label for="fmCategory">Categoría</label>
+                  <input id="fmCategory" placeholder="Distribución, Amenidades...">
+                </div>
+              </div>
+
+              <div class="field-row three">
+                <div class="field">
+                  <label for="fmType">Tipo de valor *</label>
+                  <select id="fmType" required>
+                    <option value="texto">Texto</option>
+                    <option value="numero">Número entero</option>
+                    <option value="decimal">Decimal</option>
+                    <option value="booleano">Sí / No</option>
+                    <option value="lista">Lista</option>
+                    <option value="moneda">Moneda</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="fmUnit">Unidad</label>
+                  <input id="fmUnit" placeholder="m², m, etc.">
+                </div>
+
+                <div class="field">
+                  <label for="fmOrder">Orden</label>
+                  <input id="fmOrder" type="number" value="0">
+                </div>
+              </div>
+
+              <div class="field-row two">
+                <label class="check-line"><input id="fmCard" type="checkbox"> Mostrar en tarjeta</label>
+                <label class="check-line"><input id="fmFilter" type="checkbox"> Usar como filtro</label>
+              </div>
+
+              <div id="listOptionsBox" class="field" style="display:none;">
+                <label for="fmOptions">Opciones (una por línea)</label>
+                <textarea id="fmOptions" rows="5" placeholder="Abierta&#10;Cerrada&#10;Americana"></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Guardar característica</button>
+                <button id="cancelFeatureMasterBtn" class="btn btn-secondary" type="button">Cancelar</button>
+                <span id="featureMasterStatus" class="status-msg"></span>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div id="featureMasterList"></div>
+          </div>
+        </section>
+
+        <!-- TYPES -->
+        <section class="admin-view admin-only-view" id="view-types">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Catálogo</span>
+              <h2>Tipos de inmueble</h2>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <p class="muted">Selecciona un tipo y define cuáles características del maestro son requeridas para poder publicar.</p>
+            <div class="field">
+              <label for="typeConfigSelect">Tipo de inmueble</label>
+              <select id="typeConfigSelect"></select>
+            </div>
+            <div id="typeFeatureConfig" class="master-check-list"></div>
+            <div class="form-actions">
+              <button id="saveTypeConfigBtn" class="btn btn-primary" type="button">Guardar requerimientos</button>
+              <span id="typeConfigStatus" class="status-msg"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- LOCATIONS -->
+        <section class="admin-view admin-only-view" id="view-locations">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">INE / territorio</span>
+              <h2>Ubicaciones</h2>
+            </div>
+          </div>
+
+          <div class="stats-grid three">
+            <article class="stat-card"><span>Departamentos</span><strong id="locDepartments">0</strong></article>
+            <article class="stat-card"><span>Municipios</span><strong id="locMunicipalities">0</strong></article>
+            <article class="stat-card"><span>Zonas</span><strong id="locZones">0</strong></article>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Sincronización</span>
+                <h3>Catálogo territorial del INE</h3>
+              </div>
+            </div>
+
+            <p class="muted">
+              Ejecuta la función administrativa que carga o actualiza departamentos, municipios y zonas desde la fuente configurada.
+            </p>
+
+            <button id="syncIneBtn" class="btn btn-primary" type="button">Sincronizar con INE</button>
+            <span id="syncIneStatus" class="status-msg"></span>
+          </div>
+
+          <div class="admin-card">
+            <div class="field-row two">
+              <div class="field">
+                <label for="locDepartmentSelect">Departamento</label>
+                <select id="locDepartmentSelect"></select>
+              </div>
+              <div class="field">
+                <label for="locMunicipalitySelect">Municipio</label>
+                <select id="locMunicipalitySelect" disabled></select>
+              </div>
+            </div>
+            <div id="locationPreview"></div>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section class="admin-view" id="view-profile">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Cuenta</span>
+              <h2>Mi perfil</h2>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <form id="profileForm">
+              <div class="field-row two">
+                <div class="field">
+                  <label for="meName">Nombre</label>
+                  <input id="meName" required>
+                </div>
+                <div class="field">
+                  <label for="meSurname">Apellido</label>
+                  <input id="meSurname">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="meEmail">Correo</label>
+                <input id="meEmail" type="email" disabled>
+              </div>
+
+              <div class="field-row two">
+                <div class="field">
+                  <label for="mePhone">Teléfono</label>
+                  <input id="mePhone">
+                </div>
+                <div class="field">
+                  <label for="meWhatsapp">WhatsApp</label>
+                  <input id="meWhatsapp">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="mePhoto">URL de fotografía</label>
+                <input id="mePhoto" type="url">
+              </div>
+
+              <div class="field">
+                <label for="meBio">Biografía</label>
+                <textarea id="meBio" rows="5"></textarea>
+              </div>
+
+              <button class="btn btn-primary" type="submit">Guardar perfil</button>
+              <span id="profileStatus" class="status-msg"></span>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+
+<script>
+const qs = (id) => document.getElementById(id);
+
+let db = null;
+let currentUser = null;
+let currentAgent = null;
+let isAdmin = false;
+
+let types = [];
+let features = [];
+let agents = [];
+let departments = [];
+let municipalities = [];
+let zones = [];
+let properties = [];
+
+let editingProperty = null;
+let existingPropertyPhotos = [];
+let selectedPhotoFiles = [];
+let requiredFeatureIds = new Set();
+
+function esc(v) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function slugify(v) {
+  return String(v || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function setStatus(el, msg = '', type = '') {
+  el.textContent = msg;
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function globalMessage(msg, type = '') {
+  const el = qs('globalStatus');
+  if (!msg) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+  el.className = 'global-status ' + type;
+  el.textContent = msg;
+}
+
+function formatMoney(value, currency) {
+  const symbol = currency === 'USD' ? '$' : 'Q';
+  return `${symbol}${Number(value || 0).toLocaleString('es-GT', { maximumFractionDigits: 2 })}`;
+}
+
+function initializeSupabase() {
+  if (!window.supabase?.createClient) throw new Error('No se cargó Supabase.');
+  if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
+    throw new Error('Falta la configuración de Supabase.');
+  }
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+async function login(email, password) {
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+async function loadCurrentAgent() {
+  const { data: userData, error: userError } = await db.auth.getUser();
+  if (userError || !userData.user) throw userError || new Error('Sesión inválida.');
+  currentUser = userData.user;
+
+  const { data, error } = await db
+    .from('agentes')
+    .select('*')
+    .eq('auth_user_id', currentUser.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Tu usuario no tiene un perfil de agente vinculado.');
+  if (!data.activo) throw new Error('Tu cuenta está inactiva.');
+
+  currentAgent = data;
+  isAdmin = data.es_admin === true;
+
+  qs('profileName').textContent = [data.nombre, data.apellido].filter(Boolean).join(' ');
+  qs('profileRole').textContent = isAdmin ? 'Administrador' : 'Agente';
+  qs('profileAvatar').textContent = (data.nombre || 'A').charAt(0).toUpperCase();
+  qs('navProperties').textContent = isAdmin ? 'Propiedades' : 'Mis propiedades';
+
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
+
+  qs('propertiesHeading').textContent = isAdmin ? 'Propiedades' : 'Mis propiedades';
+  qs('agentField').style.display = isAdmin ? '' : 'none';
+}
+
+async function bootstrap() {
+  await loadCurrentAgent();
+  await Promise.all([
+    loadTypes(),
+    loadFeatures(),
+    loadDepartments(),
+    isAdmin ? loadAgents() : Promise.resolve()
+  ]);
+  await loadProperties();
+  populateProfile();
+  qs('logoutBtn').style.display = 'inline-flex';
+  qs('loginView').style.display = 'none';
+  qs('appView').style.display = 'block';
+}
+
+async function loadTypes() {
+  const { data, error } = await db.from('tipos_inmueble').select('*').eq('activo', true).order('orden');
+  if (error) throw error;
+  types = data || [];
+
+  const opts = '<option value="">Seleccionar...</option>' +
+    types.map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
+
+  qs('pType').innerHTML = opts;
+  qs('typeConfigSelect').innerHTML = opts;
+}
+
+async function loadFeatures() {
+  const { data, error } = await db.from('caracteristicas').select('*').eq('activo', true).order('orden');
+  if (error) throw error;
+  features = data || [];
+  renderFeatureMasterList();
+}
+
+async function loadAgents() {
+  if (!isAdmin) return;
+  const { data, error } = await db.from('agentes').select('*').order('nombre');
+  if (error) throw error;
+  agents = data || [];
+
+  const active = agents.filter(a => a.activo);
+  const options = '<option value="">Seleccionar...</option>' +
+    active.map(a => `<option value="${a.id}">${esc([a.nombre, a.apellido].filter(Boolean).join(' '))}</option>`).join('');
+
+  qs('pAgent').innerHTML = options;
+  qs('propertyAgentFilter').innerHTML = '<option value="">Todos los agentes</option>' +
+    active.map(a => `<option value="${a.id}">${esc([a.nombre, a.apellido].filter(Boolean).join(' '))}</option>`).join('');
+
+  renderAgents();
+}
+
+async function loadDepartments() {
+  const { data, error } = await db.from('departamentos').select('*').eq('activo', true).order('nombre');
+  if (error) throw error;
+  departments = data || [];
+
+  const options = '<option value="">Seleccionar...</option>' +
+    departments.map(d => `<option value="${d.id}">${esc(d.nombre)}</option>`).join('');
+
+  qs('pDepartment').innerHTML = options;
+  qs('locDepartmentSelect').innerHTML = options;
+}
+
+async function loadMunicipalities(departmentId, target = qs('pMunicipality')) {
+  target.innerHTML = '<option value="">Seleccionar...</option>';
+  target.disabled = true;
+  if (!departmentId) return [];
+
+  const { data, error } = await db
+    .from('municipios')
+    .select('*')
+    .eq('departamento_id', departmentId)
+    .eq('activo', true)
+    .order('nombre');
+
+  if (error) throw error;
+  municipalities = data || [];
+  target.innerHTML = '<option value="">Seleccionar...</option>' +
+    municipalities.map(m => `<option value="${m.id}">${esc(m.nombre)}</option>`).join('');
+  target.disabled = false;
+  return municipalities;
+}
+
+async function loadZones(municipalityId, target = qs('pZone')) {
+  target.innerHTML = '<option value="">Seleccionar...</option>';
+  target.disabled = true;
+  if (!municipalityId) return [];
+
+  const { data, error } = await db
+    .from('zonas')
+    .select('*')
+    .eq('municipio_id', municipalityId)
+    .eq('activo', true)
+    .order('es_sin_zona', { ascending: true })
+    .order('numero_zona', { ascending: true, nullsFirst: false })
+    .order('nombre');
+
+  if (error) throw error;
+  zones = data || [];
+  target.innerHTML = '<option value="">Seleccionar...</option>' +
+    zones.map(z => `<option value="${z.id}">${esc(z.nombre)}</option>`).join('');
+  target.disabled = false;
+  return zones;
+}
+
+async function loadProperties() {
+  let query = db
+    .from('propiedades')
+    .select(`
+      *,
+      tipos_inmueble(nombre),
+      agentes(nombre, apellido),
+      departamentos(nombre),
+      municipios(nombre),
+      zonas(nombre),
+      propiedad_fotos(id,url,storage_path,principal,orden)
+    `);
+
+  if (!isAdmin) query = query.eq('agente_id', currentAgent.id);
+
+  const { data, error } = await query.order('creado', { ascending: false });
+  if (error) throw error;
+
+  properties = data || [];
+  renderProperties();
+  updateStats();
+  renderRecent();
+}
+
+function filteredProperties() {
+  const text = qs('propertySearch').value.trim().toLowerCase();
+  const status = qs('propertyStatusFilter').value;
+  const agent = qs('propertyAgentFilter').value;
+
+  return properties.filter(p => {
+    if (text && !String(p.titulo || '').toLowerCase().includes(text)) return false;
+    if (agent && p.agente_id !== agent) return false;
+    if (status === 'published' && !p.publicada) return false;
+    if (status === 'draft' && p.publicada) return false;
+    if (status === 'available' && !p.disponible) return false;
+    if (status === 'unavailable' && p.disponible) return false;
+    return true;
+  });
+}
+
+function propertyRowHtml(p) {
+  const photo = p.propiedad_fotos?.slice().sort((a,b)=>a.orden-b.orden)[0]?.url;
+  return `
+    <article class="property-row-v3">
+      ${photo
+        ? `<img src="${esc(photo)}" alt="">`
+        : `<div class="property-row-placeholder">Sin foto</div>`}
+      <div class="property-row-content">
+        <div class="property-row-titleline">
+          <h3>${esc(p.titulo)}</h3>
+          <div class="row-badges">
+            <span class="mini-badge ${p.publicada ? 'published' : 'draft'}">${p.publicada ? 'Publicada' : 'Borrador'}</span>
+            <span class="mini-badge ${p.disponible ? 'available' : 'unavailable'}">${p.disponible ? 'Disponible' : 'No disponible'}</span>
           </div>
         </div>
+        <p>${esc(p.tipos_inmueble?.nombre || '')} · ${esc(p.municipios?.nombre || '')} · ${esc(p.zonas?.nombre || '')}</p>
+        <strong>${esc(formatMoney(p.precio, p.moneda))}</strong>
+        ${isAdmin ? `<span class="agent-caption">${esc([p.agentes?.nombre, p.agentes?.apellido].filter(Boolean).join(' '))}</span>` : ''}
       </div>
-    </section>
-  </main>
+      <div class="property-row-actions">
+        <button class="btn btn-secondary btn-small" data-action="edit-property" data-id="${p.id}" type="button">Editar</button>
+        <button class="btn btn-secondary btn-small" data-action="toggle-available" data-id="${p.id}" type="button">${p.disponible ? 'Pausar' : 'Activar'}</button>
+        ${p.publicada ? `<button class="btn btn-secondary btn-small" data-action="unpublish" data-id="${p.id}" type="button">Pasar a borrador</button>` : ''}
+        <button class="btn btn-danger btn-small" data-action="delete-property" data-id="${p.id}" type="button">Eliminar</button>
+      </div>
+    </article>`;
+}
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+function renderProperties() {
+  const list = filteredProperties();
+  qs('propertyList').innerHTML = list.length
+    ? list.map(propertyRowHtml).join('')
+    : '<p class="muted">No hay propiedades que coincidan con el filtro.</p>';
+}
 
-  <script>
-    const loginShell = document.getElementById('loginShell');
-    const adminShell = document.getElementById('adminShell');
-    const logoutLink = document.getElementById('logoutLink');
-    const loginForm = document.getElementById('loginForm');
-    const loginBtn = document.getElementById('loginBtn');
-    const loginStatus = document.getElementById('loginStatus');
+function updateStats() {
+  qs('statTotal').textContent = properties.length;
+  qs('statPublished').textContent = properties.filter(p => p.publicada).length;
+  qs('statDrafts').textContent = properties.filter(p => !p.publicada).length;
+  qs('statAvailable').textContent = properties.filter(p => p.disponible).length;
+}
 
-    const propertyForm = document.getElementById('propertyForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const formStatus = document.getElementById('formStatus');
-    const propertyList = document.getElementById('propertyList');
-    const refreshListBtn = document.getElementById('refreshListBtn');
+function renderRecent() {
+  const list = properties.slice(0, 5);
+  qs('recentProperties').innerHTML = list.length
+    ? list.map(propertyRowHtml).join('')
+    : '<p class="muted">Aún no hay propiedades.</p>';
+}
 
-    const photoDrop = document.getElementById('photoDrop');
-    const photoInput = document.getElementById('photoInput');
-    const photoPreview = document.getElementById('photoPreview');
-    const existingPhotoPreview = document.getElementById('existingPhotoPreview');
-    const newPhotosBlock = document.getElementById('newPhotosBlock');
-    const existingPhotosBlock = document.getElementById('existingPhotosBlock');
+function showView(name) {
+  document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
+  qs(`view-${name}`).classList.add('active');
 
-    const formTitle = document.getElementById('formTitle');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.nav-item[data-view="${name}"]`)?.classList.add('active');
 
-    let supabaseClient = null;
-    let selectedFiles = [];
-    let editingId = null;
-    let editingExistingPhotos = [];
-    let loadedProperties = [];
+  if (name === 'agents' && isAdmin) loadAgents().catch(showError);
+  if (name === 'features' && isAdmin) loadFeatures().catch(showError);
+  if (name === 'locations' && isAdmin) loadLocationStats().catch(showError);
+}
 
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return '';
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+function showError(error) {
+  console.error(error);
+  globalMessage(error?.message || 'Ocurrió un error.', 'error');
+}
+
+async function loadRequiredFeatures(typeId, values = {}) {
+  requiredFeatureIds = new Set();
+  qs('requiredFeatures').innerHTML = '<p class="muted">Cargando...</p>';
+  if (!typeId) {
+    qs('requiredFeatures').innerHTML = '<p class="muted">Selecciona el tipo de inmueble.</p>';
+    return;
+  }
+
+  const { data, error } = await db
+    .from('tipo_inmueble_caracteristicas')
+    .select('caracteristica_id,requerida,orden,caracteristicas(*)')
+    .eq('tipo_inmueble_id', typeId)
+    .eq('requerida', true)
+    .order('orden');
+
+  if (error) throw error;
+
+  const rows = data || [];
+  rows.forEach(r => requiredFeatureIds.add(r.caracteristica_id));
+
+  qs('requiredFeatures').innerHTML = rows.length
+    ? rows.map(r => featureInputHtml(r.caracteristicas, values[r.caracteristica_id], true)).join('')
+    : '<p class="muted">Este tipo no tiene características obligatorias adicionales.</p>';
+}
+
+function featureInputHtml(feature, value, required = false, removable = false) {
+  const inputId = `feature-${feature.id}-${Math.random().toString(36).slice(2,7)}`;
+  let input = '';
+
+  if (feature.tipo_valor === 'booleano') {
+    const val = value === true ? 'true' : value === false ? 'false' : '';
+    input = `
+      <select class="feature-value" data-feature-id="${feature.id}" data-type="booleano" ${required ? 'required' : ''}>
+        <option value="">Seleccionar...</option>
+        <option value="true" ${val === 'true' ? 'selected' : ''}>Sí</option>
+        <option value="false" ${val === 'false' ? 'selected' : ''}>No</option>
+      </select>`;
+  } else if (feature.tipo_valor === 'lista') {
+    input = `<select class="feature-value" data-feature-id="${feature.id}" data-type="lista" ${required ? 'required' : ''} data-list-feature="${feature.id}">
+      <option value="">Cargando...</option>
+    </select>`;
+    setTimeout(() => populateListFeature(feature.id, value), 0);
+  } else {
+    const type = ['numero','decimal','moneda'].includes(feature.tipo_valor) ? 'number' : 'text';
+    const step = feature.tipo_valor === 'numero' ? '1' : '0.01';
+    input = `<input class="feature-value" data-feature-id="${feature.id}" data-type="${feature.tipo_valor}" type="${type}" ${type === 'number' ? `step="${step}"` : ''} value="${esc(value ?? '')}" ${required ? 'required' : ''}>`;
+  }
+
+  return `
+    <div class="dynamic-feature-row" data-feature-row="${feature.id}">
+      <div class="dynamic-feature-label">
+        <strong>${esc(feature.nombre)}${required ? ' *' : ''}</strong>
+        ${feature.unidad ? `<span>${esc(feature.unidad)}</span>` : ''}
+      </div>
+      <div class="dynamic-feature-input">${input}</div>
+      ${removable ? `<button type="button" class="icon-remove" data-remove-feature="${feature.id}" aria-label="Eliminar">✕</button>` : ''}
+    </div>`;
+}
+
+async function populateListFeature(featureId, selected) {
+  const selector = document.querySelector(`select[data-list-feature="${featureId}"]`);
+  if (!selector) return;
+  const { data, error } = await db
+    .from('caracteristica_opciones')
+    .select('*')
+    .eq('caracteristica_id', featureId)
+    .eq('activo', true)
+    .order('orden');
+  if (error) return console.error(error);
+
+  selector.innerHTML = '<option value="">Seleccionar...</option>' +
+    (data || []).map(o => `<option value="${esc(o.valor)}" ${String(o.valor) === String(selected) ? 'selected' : ''}>${esc(o.etiqueta)}</option>`).join('');
+}
+
+function addExtraFeature(featureId = '', value = null) {
+  const used = new Set(
+    [...document.querySelectorAll('.feature-value')].map(el => el.dataset.featureId)
+  );
+
+  const choices = features.filter(f => !requiredFeatureIds.has(f.id) && (!used.has(f.id) || f.id === featureId));
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'extra-feature-selector-row';
+
+  wrapper.innerHTML = `
+    <select class="extra-feature-select">
+      <option value="">Seleccionar característica...</option>
+      ${choices.map(f => `<option value="${f.id}" ${f.id === featureId ? 'selected' : ''}>${esc(f.nombre)}</option>`).join('')}
+    </select>
+    <div class="extra-feature-value-slot"></div>
+    <button type="button" class="icon-remove remove-extra-row">✕</button>`;
+
+  qs('extraFeatures').appendChild(wrapper);
+
+  const select = wrapper.querySelector('.extra-feature-select');
+  const slot = wrapper.querySelector('.extra-feature-value-slot');
+
+  const render = () => {
+    const feature = features.find(f => f.id === select.value);
+    slot.innerHTML = feature ? featureInputHtml(feature, feature.id === featureId ? value : null, false, false) : '';
+  };
+
+  select.addEventListener('change', render);
+  wrapper.querySelector('.remove-extra-row').addEventListener('click', () => wrapper.remove());
+  if (featureId) render();
+}
+
+function collectFeatureValues() {
+  const result = new Map();
+
+  document.querySelectorAll('.feature-value').forEach(el => {
+    const id = el.dataset.featureId;
+    const type = el.dataset.type;
+    if (!id || el.value === '') return;
+
+    let value = el.value;
+    if (type === 'booleano') value = value === 'true';
+    else if (['numero','decimal','moneda'].includes(type)) value = Number(value);
+
+    result.set(id, value);
+  });
+
+  return result;
+}
+
+async function uploadPropertyPhotos(propertyId) {
+  const inserted = [];
+  let order = existingPropertyPhotos.length;
+
+  for (const file of selectedPhotoFiles) {
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${currentAgent.id}/${propertyId}/${crypto.randomUUID()}-${safe}`;
+
+    const { error: uploadError } = await db.storage
+      .from('property-photos')
+      .upload(path, file, { upsert: false });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicData } = db.storage.from('property-photos').getPublicUrl(path);
+    inserted.push({
+      propiedad_id: propertyId,
+      url: publicData.publicUrl,
+      storage_path: path,
+      principal: order === 0,
+      orden: order++
+    });
+  }
+
+  if (inserted.length) {
+    const { error } = await db.from('propiedad_fotos').insert(inserted);
+    if (error) throw error;
+  }
+}
+
+async function saveProperty(publish) {
+  const status = qs('propertyStatus');
+  setStatus(status, publish ? 'Guardando y validando publicación...' : 'Guardando borrador...');
+
+  const agentId = isAdmin ? qs('pAgent').value : currentAgent.id;
+
+  const payload = {
+    agente_id: agentId,
+    titulo: qs('pTitle').value.trim(),
+    tipo_inmueble_id: qs('pType').value,
+    tipo_operacion: qs('pOperation').value,
+    precio: Number(qs('pPrice').value),
+    moneda: qs('pCurrency').value,
+    departamento_id: qs('pDepartment').value,
+    municipio_id: qs('pMunicipality').value,
+    zona_id: qs('pZone').value,
+    direccion_referencia: qs('pReference').value.trim() || null,
+    descripcion: qs('pDescription').value.trim() || null,
+    disponible: qs('pAvailable').checked,
+    publicada: false
+  };
+
+  if (!payload.agente_id || !payload.titulo || !payload.tipo_inmueble_id || !payload.departamento_id || !payload.municipio_id || !payload.zona_id) {
+    throw new Error('Completa todos los campos obligatorios.');
+  }
+
+  let propertyId = qs('propertyId').value;
+
+  if (propertyId) {
+    delete payload.publicada;
+    const { error } = await db.from('propiedades').update(payload).eq('id', propertyId);
+    if (error) throw error;
+  } else {
+    const { data, error } = await db.from('propiedades').insert(payload).select('id').single();
+    if (error) throw error;
+    propertyId = data.id;
+    qs('propertyId').value = propertyId;
+  }
+
+  const values = collectFeatureValues();
+
+  const { data: existingValues, error: existingError } = await db
+    .from('propiedad_caracteristicas')
+    .select('id,caracteristica_id')
+    .eq('propiedad_id', propertyId);
+
+  if (existingError) throw existingError;
+
+  const currentIds = new Set(values.keys());
+  const toDelete = (existingValues || []).filter(x => !currentIds.has(x.caracteristica_id)).map(x => x.id);
+
+  if (toDelete.length) {
+    const { error } = await db.from('propiedad_caracteristicas').delete().in('id', toDelete);
+    if (error) throw error;
+  }
+
+  const upserts = [...values.entries()].map(([featureId, value]) => ({
+    propiedad_id: propertyId,
+    caracteristica_id: featureId,
+    valor: value
+  }));
+
+  if (upserts.length) {
+    const { error } = await db.from('propiedad_caracteristicas').upsert(upserts, {
+      onConflict: 'propiedad_id,caracteristica_id'
+    });
+    if (error) throw error;
+  }
+
+  await uploadPropertyPhotos(propertyId);
+
+  if (publish) {
+    const { error } = await db.rpc('publicar_propiedad', { p_propiedad_id: propertyId });
+    if (error) throw error;
+  }
+
+  setStatus(status, publish ? '✓ Propiedad publicada.' : '✓ Borrador guardado.', 'success');
+  await loadProperties();
+  setTimeout(closePropertyEditor, 700);
+}
+
+async function openPropertyEditor(property = null) {
+  editingProperty = property;
+  selectedPhotoFiles = [];
+  existingPropertyPhotos = property?.propiedad_fotos?.slice().sort((a,b)=>a.orden-b.orden) || [];
+  qs('newPhotos').innerHTML = '';
+  qs('newPhotosBlock').style.display = 'none';
+
+  qs('propertyEditor').style.display = 'block';
+  qs('propertyEditorEyebrow').textContent = property ? 'Edición' : 'Nueva propiedad';
+  qs('propertyEditorTitle').textContent = property ? 'Editar propiedad' : 'Crear propiedad';
+  qs('propertyStatus').textContent = '';
+  qs('extraFeatures').innerHTML = '';
+
+  if (!property) {
+    qs('propertyForm').reset();
+    qs('propertyId').value = '';
+    qs('pAvailable').checked = true;
+    qs('pMunicipality').innerHTML = '<option value="">Seleccionar...</option>';
+    qs('pMunicipality').disabled = true;
+    qs('pZone').innerHTML = '<option value="">Seleccionar...</option>';
+    qs('pZone').disabled = true;
+    if (isAdmin) qs('pAgent').value = '';
+    await loadRequiredFeatures('');
+    renderExistingPhotos();
+    qs('propertyEditor').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  qs('propertyId').value = property.id;
+  qs('pTitle').value = property.titulo || '';
+  qs('pType').value = property.tipo_inmueble_id;
+  qs('pOperation').value = property.tipo_operacion;
+  qs('pCurrency').value = property.moneda;
+  qs('pPrice').value = property.precio;
+  qs('pDepartment').value = property.departamento_id;
+  qs('pReference').value = property.direccion_referencia || '';
+  qs('pDescription').value = property.descripcion || '';
+  qs('pAvailable').checked = property.disponible;
+  if (isAdmin) qs('pAgent').value = property.agente_id;
+
+  await loadMunicipalities(property.departamento_id);
+  qs('pMunicipality').value = property.municipio_id;
+  await loadZones(property.municipio_id);
+  qs('pZone').value = property.zona_id;
+
+  const { data: featureRows, error } = await db
+    .from('propiedad_caracteristicas')
+    .select('caracteristica_id,valor')
+    .eq('propiedad_id', property.id);
+  if (error) throw error;
+
+  const valueMap = Object.fromEntries((featureRows || []).map(x => [x.caracteristica_id, x.valor]));
+  await loadRequiredFeatures(property.tipo_inmueble_id, valueMap);
+
+  (featureRows || []).forEach(row => {
+    if (!requiredFeatureIds.has(row.caracteristica_id)) addExtraFeature(row.caracteristica_id, row.valor);
+  });
+
+  renderExistingPhotos();
+  qs('propertyEditor').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderExistingPhotos() {
+  qs('existingPhotosBlock').style.display = existingPropertyPhotos.length ? 'block' : 'none';
+  qs('existingPhotos').innerHTML = existingPropertyPhotos.map(photo => `
+    <div class="photo-preview-item with-action">
+      <img src="${esc(photo.url)}" alt="">
+      <button type="button" data-remove-existing-photo="${photo.id}" title="Eliminar">✕</button>
+    </div>`).join('');
+}
+
+function closePropertyEditor() {
+  qs('propertyEditor').style.display = 'none';
+  editingProperty = null;
+  selectedPhotoFiles = [];
+  existingPropertyPhotos = [];
+  qs('propertyForm').reset();
+  qs('extraFeatures').innerHTML = '';
+}
+
+function renderAgents() {
+  qs('agentList').innerHTML = agents.length
+    ? agents.map(a => `
+      <article class="agent-card">
+        <div class="agent-card-avatar">${esc((a.nombre || 'A').charAt(0).toUpperCase())}</div>
+        <div>
+          <h3>${esc([a.nombre,a.apellido].filter(Boolean).join(' '))}</h3>
+          <p>${esc(a.correo || '')}</p>
+          <span>${a.es_admin ? 'Administrador' : 'Agente'} · ${a.activo ? 'Activo' : 'Inactivo'}</span>
+        </div>
+      </article>`).join('')
+    : '<p class="muted">No hay agentes.</p>';
+}
+
+function renderFeatureMasterList() {
+  const container = qs('featureMasterList');
+  if (!container) return;
+  container.innerHTML = features.length
+    ? `<div class="master-table">
+        ${features.map(f => `
+          <div class="master-row">
+            <div>
+              <strong>${esc(f.nombre)}</strong>
+              <span>${esc(f.categoria || 'Sin categoría')} · ${esc(f.tipo_valor)} ${f.unidad ? '· ' + esc(f.unidad) : ''}</span>
+            </div>
+            <div class="master-row-flags">
+              ${f.mostrar_en_tarjeta ? '<span class="mini-badge published">Tarjeta</span>' : ''}
+              ${f.usar_como_filtro ? '<span class="mini-badge available">Filtro</span>' : ''}
+            </div>
+            <button class="btn btn-secondary btn-small" data-edit-master-feature="${f.id}" type="button">Editar</button>
+          </div>`).join('')}
+      </div>`
+    : '<p class="muted">No hay características.</p>';
+}
+
+async function editFeatureMaster(featureId) {
+  const f = features.find(x => x.id === featureId);
+  if (!f) return;
+
+  qs('fmId').value = f.id;
+  qs('fmName').value = f.nombre;
+  qs('fmCategory').value = f.categoria || '';
+  qs('fmType').value = f.tipo_valor;
+  qs('fmUnit').value = f.unidad || '';
+  qs('fmOrder').value = f.orden || 0;
+  qs('fmCard').checked = !!f.mostrar_en_tarjeta;
+  qs('fmFilter').checked = !!f.usar_como_filtro;
+
+  if (f.tipo_valor === 'lista') {
+    const { data } = await db.from('caracteristica_opciones').select('*').eq('caracteristica_id', f.id).order('orden');
+    qs('fmOptions').value = (data || []).map(x => x.etiqueta).join('\n');
+  } else {
+    qs('fmOptions').value = '';
+  }
+
+  updateOptionsVisibility();
+  qs('featureMasterEditor').style.display = 'block';
+  qs('featureMasterEditor').scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateOptionsVisibility() {
+  qs('listOptionsBox').style.display = qs('fmType').value === 'lista' ? '' : 'none';
+}
+
+async function saveFeatureMaster(event) {
+  event.preventDefault();
+  const status = qs('featureMasterStatus');
+  setStatus(status, 'Guardando...');
+
+  const id = qs('fmId').value;
+  const name = qs('fmName').value.trim();
+  const type = qs('fmType').value;
+
+  const payload = {
+    nombre: name,
+    slug: slugify(name),
+    categoria: qs('fmCategory').value.trim() || null,
+    tipo_valor: type,
+    unidad: qs('fmUnit').value.trim() || null,
+    mostrar_en_tarjeta: qs('fmCard').checked,
+    usar_como_filtro: qs('fmFilter').checked,
+    activo: true,
+    orden: Number(qs('fmOrder').value || 0)
+  };
+
+  let featureId = id;
+  if (id) {
+    const { error } = await db.from('caracteristicas').update(payload).eq('id', id);
+    if (error) throw error;
+  } else {
+    const { data, error } = await db.from('caracteristicas').insert(payload).select('id').single();
+    if (error) throw error;
+    featureId = data.id;
+  }
+
+  if (type === 'lista') {
+    const lines = qs('fmOptions').value.split('\n').map(x => x.trim()).filter(Boolean);
+
+    const { error: deleteError } = await db.from('caracteristica_opciones').delete().eq('caracteristica_id', featureId);
+    if (deleteError) throw deleteError;
+
+    if (lines.length) {
+      const rows = lines.map((label, i) => ({
+        caracteristica_id: featureId,
+        valor: slugify(label),
+        etiqueta: label,
+        orden: i,
+        activo: true
+      }));
+      const { error } = await db.from('caracteristica_opciones').insert(rows);
+      if (error) throw error;
+    }
+  }
+
+  setStatus(status, '✓ Guardado.', 'success');
+  await loadFeatures();
+  setTimeout(() => {
+    qs('featureMasterEditor').style.display = 'none';
+    qs('featureMasterForm').reset();
+    qs('fmId').value = '';
+  }, 500);
+}
+
+async function loadTypeFeatureConfig(typeId) {
+  const box = qs('typeFeatureConfig');
+  box.innerHTML = '<p class="muted">Cargando...</p>';
+  if (!typeId) {
+    box.innerHTML = '<p class="muted">Selecciona un tipo.</p>';
+    return;
+  }
+
+  const { data, error } = await db
+    .from('tipo_inmueble_caracteristicas')
+    .select('caracteristica_id,requerida')
+    .eq('tipo_inmueble_id', typeId);
+  if (error) throw error;
+
+  const required = new Set((data || []).filter(x => x.requerida).map(x => x.caracteristica_id));
+
+  box.innerHTML = features.map(f => `
+    <label class="master-check-row">
+      <input type="checkbox" data-type-feature="${f.id}" ${required.has(f.id) ? 'checked' : ''}>
+      <span><strong>${esc(f.nombre)}</strong><small>${esc(f.categoria || '')}</small></span>
+    </label>`).join('');
+}
+
+async function saveTypeFeatureConfig() {
+  const typeId = qs('typeConfigSelect').value;
+  if (!typeId) return;
+
+  const checked = [...document.querySelectorAll('[data-type-feature]:checked')].map(x => x.dataset.typeFeature);
+
+  const { error: deleteError } = await db
+    .from('tipo_inmueble_caracteristicas')
+    .delete()
+    .eq('tipo_inmueble_id', typeId);
+  if (deleteError) throw deleteError;
+
+  if (checked.length) {
+    const rows = checked.map((featureId, i) => ({
+      tipo_inmueble_id: typeId,
+      caracteristica_id: featureId,
+      requerida: true,
+      orden: i
+    }));
+    const { error } = await db.from('tipo_inmueble_caracteristicas').insert(rows);
+    if (error) throw error;
+  }
+
+  setStatus(qs('typeConfigStatus'), '✓ Requerimientos guardados.', 'success');
+}
+
+async function loadLocationStats() {
+  const [d, m, z] = await Promise.all([
+    db.from('departamentos').select('*', { count: 'exact', head: true }),
+    db.from('municipios').select('*', { count: 'exact', head: true }),
+    db.from('zonas').select('*', { count: 'exact', head: true })
+  ]);
+  qs('locDepartments').textContent = d.count ?? 0;
+  qs('locMunicipalities').textContent = m.count ?? 0;
+  qs('locZones').textContent = z.count ?? 0;
+}
+
+async function syncIne() {
+  const status = qs('syncIneStatus');
+  qs('syncIneBtn').disabled = true;
+  setStatus(status, 'Sincronizando; puede tomar varios minutos...');
+
+  try {
+    const { data, error } = await db.functions.invoke('sincronizar-ubicaciones-ine', { body: {} });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    setStatus(
+      status,
+      `✓ Sincronización completada. Departamentos: ${data.departamentos ?? '—'}, municipios: ${data.municipios ?? '—'}, zonas: ${data.zonas_ine ?? '—'}.`,
+      'success'
+    );
+
+    await loadDepartments();
+    await loadLocationStats();
+  } finally {
+    qs('syncIneBtn').disabled = false;
+  }
+}
+
+function populateProfile() {
+  qs('meName').value = currentAgent.nombre || '';
+  qs('meSurname').value = currentAgent.apellido || '';
+  qs('meEmail').value = currentAgent.correo || currentUser.email || '';
+  qs('mePhone').value = currentAgent.telefono || '';
+  qs('meWhatsapp').value = currentAgent.whatsapp || '';
+  qs('mePhoto').value = currentAgent.foto_url || '';
+  qs('meBio').value = currentAgent.biografia || '';
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const payload = {
+    nombre: qs('meName').value.trim(),
+    apellido: qs('meSurname').value.trim() || null,
+    telefono: qs('mePhone').value.trim() || null,
+    whatsapp: qs('meWhatsapp').value.trim() || null,
+    foto_url: qs('mePhoto').value.trim() || null,
+    biografia: qs('meBio').value.trim() || null
+  };
+
+  const { data, error } = await db
+    .from('agentes')
+    .update(payload)
+    .eq('id', currentAgent.id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  currentAgent = data;
+  populateProfile();
+  qs('profileName').textContent = [data.nombre, data.apellido].filter(Boolean).join(' ');
+  setStatus(qs('profileStatus'), '✓ Perfil actualizado.', 'success');
+}
+
+qs('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const status = qs('loginStatus');
+  qs('loginBtn').disabled = true;
+  setStatus(status, 'Verificando...');
+  try {
+    await login(qs('loginEmail').value.trim(), qs('loginPassword').value);
+    await bootstrap();
+  } catch (error) {
+    setStatus(status, error.message || 'No fue posible iniciar sesión.', 'error');
+  } finally {
+    qs('loginBtn').disabled = false;
+  }
+});
+
+qs('logoutBtn').addEventListener('click', async () => {
+  await db.auth.signOut();
+  location.reload();
+});
+
+qs('adminNav').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-view]');
+  if (btn) showView(btn.dataset.view);
+});
+
+document.addEventListener('click', (e) => {
+  const go = e.target.closest('[data-go]');
+  if (go) showView(go.dataset.go);
+});
+
+qs('newPropertyBtn').addEventListener('click', () => openPropertyEditor().catch(showError));
+qs('cancelPropertyBtn').addEventListener('click', closePropertyEditor);
+qs('addFeatureBtn').addEventListener('click', () => addExtraFeature());
+
+qs('pType').addEventListener('change', () => loadRequiredFeatures(qs('pType').value).catch(showError));
+qs('pDepartment').addEventListener('change', async () => {
+  qs('pZone').innerHTML = '<option value="">Seleccionar...</option>';
+  qs('pZone').disabled = true;
+  await loadMunicipalities(qs('pDepartment').value);
+});
+qs('pMunicipality').addEventListener('change', () => loadZones(qs('pMunicipality').value).catch(showError));
+
+qs('photoDrop').addEventListener('click', () => qs('photoInput').click());
+qs('photoInput').addEventListener('change', () => {
+  selectedPhotoFiles = Array.from(qs('photoInput').files || []);
+  qs('newPhotosBlock').style.display = selectedPhotoFiles.length ? 'block' : 'none';
+  qs('newPhotos').innerHTML = selectedPhotoFiles.map(file => `
+    <div class="photo-preview-item"><img src="${URL.createObjectURL(file)}" alt=""></div>`).join('');
+});
+
+qs('existingPhotos').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-remove-existing-photo]');
+  if (!btn) return;
+  const photo = existingPropertyPhotos.find(x => x.id === btn.dataset.removeExistingPhoto);
+  if (!photo || !confirm('¿Eliminar esta fotografía?')) return;
+
+  const { error } = await db.from('propiedad_fotos').delete().eq('id', photo.id);
+  if (error) return showError(error);
+
+  if (photo.storage_path) await db.storage.from('property-photos').remove([photo.storage_path]);
+  existingPropertyPhotos = existingPropertyPhotos.filter(x => x.id !== photo.id);
+  renderExistingPhotos();
+});
+
+qs('propertyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await saveProperty(true);
+  } catch (error) {
+    setStatus(qs('propertyStatus'), error.message || 'No se pudo publicar.', 'error');
+  }
+});
+
+qs('saveDraftBtn').addEventListener('click', async () => {
+  try {
+    await saveProperty(false);
+  } catch (error) {
+    setStatus(qs('propertyStatus'), error.message || 'No se pudo guardar.', 'error');
+  }
+});
+
+qs('propertyList').addEventListener('click', propertyActionHandler);
+qs('recentProperties').addEventListener('click', propertyActionHandler);
+
+async function propertyActionHandler(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const p = properties.find(x => x.id === btn.dataset.id);
+  if (!p) return;
+
+  try {
+    if (btn.dataset.action === 'edit-property') await openPropertyEditor(p);
+
+    if (btn.dataset.action === 'toggle-available') {
+      const { error } = await db.from('propiedades').update({ disponible: !p.disponible }).eq('id', p.id);
+      if (error) throw error;
+      await loadProperties();
     }
 
-    function initBranding() {
-      try {
-        if (typeof CONTACTO !== 'undefined' && CONTACTO.nombreNegocio) {
-          document.getElementById('brandSub').textContent = CONTACTO.nombreNegocio;
-          document.title = `Panel de administración — ${CONTACTO.nombreNegocio}`;
-        }
-      } catch (error) {
-        console.warn('No se pudo cargar CONTACTO:', error);
-      }
+    if (btn.dataset.action === 'unpublish') {
+      const { error } = await db.from('propiedades').update({ publicada: false }).eq('id', p.id);
+      if (error) throw error;
+      await loadProperties();
     }
 
-    function initSupabase() {
-      try {
-        if (!window.supabase || !window.supabase.createClient) {
-          throw new Error('No se pudo cargar la librería de Supabase.');
-        }
-
-        if (typeof SUPABASE_URL === 'undefined' || !SUPABASE_URL) {
-          throw new Error('No se encontró SUPABASE_URL.');
-        }
-
-        if (typeof SUPABASE_ANON_KEY === 'undefined' || !SUPABASE_ANON_KEY) {
-          throw new Error('No se encontró SUPABASE_ANON_KEY.');
-        }
-
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (error) {
-        console.error(error);
-        loginStatus.textContent = 'Error de configuración: ' + (error.message || '');
-        loginStatus.className = 'status-msg error';
-        loginBtn.disabled = true;
-      }
+    if (btn.dataset.action === 'delete-property') {
+      if (!confirm('¿Eliminar esta propiedad permanentemente?')) return;
+      const paths = (p.propiedad_fotos || []).map(x => x.storage_path).filter(Boolean);
+      const { error } = await db.from('propiedades').delete().eq('id', p.id);
+      if (error) throw error;
+      if (paths.length) await db.storage.from('property-photos').remove(paths);
+      await loadProperties();
     }
+  } catch (error) {
+    showError(error);
+  }
+}
 
-    function showAdmin() {
-      loginShell.style.display = 'none';
-      adminShell.style.display = 'block';
-      logoutLink.style.display = 'inline-flex';
-    }
+['propertySearch','propertyStatusFilter','propertyAgentFilter'].forEach(id => {
+  qs(id).addEventListener('input', renderProperties);
+  qs(id).addEventListener('change', renderProperties);
+});
+qs('refreshPropertiesBtn').addEventListener('click', () => loadProperties().catch(showError));
 
-    function showLogin() {
-      loginShell.style.display = 'flex';
-      adminShell.style.display = 'none';
-      logoutLink.style.display = 'none';
-    }
+qs('newAgentBtn').addEventListener('click', () => qs('agentEditor').style.display = 'block');
+qs('cancelAgentBtn').addEventListener('click', () => qs('agentEditor').style.display = 'none');
 
-    loginForm.addEventListener('submit', async event => {
-      event.preventDefault();
+qs('agentForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const status = qs('agentStatus');
+  qs('createAgentBtn').disabled = true;
+  setStatus(status, 'Creando usuario e invitación...');
 
-      if (!supabaseClient) return;
-
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value;
-
-      loginBtn.disabled = true;
-      loginBtn.textContent = 'Ingresando…';
-      loginStatus.textContent = 'Verificando credenciales…';
-      loginStatus.className = 'status-msg';
-
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          let message = error.message || 'No fue posible iniciar sesión.';
-
-          if (message.toLowerCase().includes('invalid login credentials')) {
-            message = 'Correo o contraseña incorrectos.';
-          }
-
-          if (message.toLowerCase().includes('email not confirmed')) {
-            message = 'El correo todavía no ha sido confirmado en Supabase.';
-          }
-
-          throw new Error(message);
-        }
-
-        if (!data || !data.session) {
-          throw new Error('No se creó una sesión válida.');
-        }
-
-        loginStatus.textContent = '✓ Sesión iniciada.';
-        loginStatus.className = 'status-msg success';
-
-        showAdmin();
-        await loadPropertyList();
-      } catch (error) {
-        console.error(error);
-        loginStatus.textContent = error.message || 'No fue posible iniciar sesión.';
-        loginStatus.className = 'status-msg error';
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Entrar';
+  try {
+    const { data, error } = await db.functions.invoke('crear-agente', {
+      body: {
+        nombre: qs('aName').value.trim(),
+        apellido: qs('aSurname').value.trim(),
+        correo: qs('aEmail').value.trim(),
+        telefono: qs('aPhone').value.trim(),
+        whatsapp: qs('aWhatsapp').value.trim(),
+        biografia: qs('aBio').value.trim(),
+        foto_url: ''
       }
     });
 
-    logoutLink.addEventListener('click', async event => {
-      event.preventDefault();
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
 
+    setStatus(status, '✓ Agente creado; se envió la invitación.', 'success');
+    qs('agentForm').reset();
+    await loadAgents();
+  } catch (error) {
+    setStatus(status, error.message || 'No fue posible crear el agente.', 'error');
+  } finally {
+    qs('createAgentBtn').disabled = false;
+  }
+});
+
+qs('newFeatureMasterBtn').addEventListener('click', () => {
+  qs('featureMasterForm').reset();
+  qs('fmId').value = '';
+  updateOptionsVisibility();
+  qs('featureMasterEditor').style.display = 'block';
+});
+qs('cancelFeatureMasterBtn').addEventListener('click', () => qs('featureMasterEditor').style.display = 'none');
+qs('fmType').addEventListener('change', updateOptionsVisibility);
+qs('featureMasterForm').addEventListener('submit', (e) => saveFeatureMaster(e).catch(error => setStatus(qs('featureMasterStatus'), error.message, 'error')));
+qs('featureMasterList').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-edit-master-feature]');
+  if (btn) editFeatureMaster(btn.dataset.editMasterFeature).catch(showError);
+});
+
+qs('typeConfigSelect').addEventListener('change', () => loadTypeFeatureConfig(qs('typeConfigSelect').value).catch(showError));
+qs('saveTypeConfigBtn').addEventListener('click', () => saveTypeFeatureConfig().catch(error => setStatus(qs('typeConfigStatus'), error.message, 'error')));
+
+qs('syncIneBtn').addEventListener('click', () => syncIne().catch(error => setStatus(qs('syncIneStatus'), error.message, 'error')));
+
+qs('locDepartmentSelect').addEventListener('change', async () => {
+  await loadMunicipalities(qs('locDepartmentSelect').value, qs('locMunicipalitySelect'));
+  qs('locationPreview').innerHTML = '';
+});
+qs('locMunicipalitySelect').addEventListener('change', async () => {
+  const municipalityId = qs('locMunicipalitySelect').value;
+  if (!municipalityId) {
+    qs('locationPreview').innerHTML = '';
+    return;
+  }
+  const result = await loadZones(municipalityId, document.createElement('select'));
+  qs('locationPreview').innerHTML = `
+    <h4>Zonas registradas</h4>
+    <div class="chips">${result.map(z => `<span>${esc(z.nombre)}</span>`).join('')}</div>`;
+});
+
+qs('profileForm').addEventListener('submit', (e) => saveProfile(e).catch(error => setStatus(qs('profileStatus'), error.message, 'error')));
+
+try {
+  initializeSupabase();
+  db.auth.getSession().then(async ({ data }) => {
+    if (data?.session) {
       try {
-        if (supabaseClient) await supabaseClient.auth.signOut();
+        await bootstrap();
       } catch (error) {
-        console.error(error);
-      }
-
-      document.getElementById('loginPassword').value = '';
-      resetPropertyForm();
-      showLogin();
-    });
-
-    async function checkInitialSession() {
-      if (!supabaseClient) {
-        showLogin();
-        return;
-      }
-
-      try {
-        const { data, error } = await supabaseClient.auth.getSession();
-
-        if (error) throw error;
-
-        if (data && data.session) {
-          showAdmin();
-          await loadPropertyList();
-        } else {
-          showLogin();
-        }
-      } catch (error) {
-        console.error(error);
-        showLogin();
+        await db.auth.signOut();
+        setStatus(qs('loginStatus'), error.message || 'No fue posible cargar tu perfil.', 'error');
       }
     }
-
-    photoDrop.addEventListener('click', () => photoInput.click());
-
-    photoInput.addEventListener('change', () => {
-      selectedFiles = Array.from(photoInput.files || []);
-      renderSelectedPhotos();
-    });
-
-    function renderSelectedPhotos() {
-      photoPreview.innerHTML = '';
-      newPhotosBlock.style.display = selectedFiles.length ? 'block' : 'none';
-
-      selectedFiles.forEach(file => {
-        const item = document.createElement('div');
-        item.className = 'photo-preview-item';
-
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.alt = file.name;
-
-        item.appendChild(img);
-        photoPreview.appendChild(item);
-      });
-    }
-
-    function renderExistingPhotos() {
-      existingPhotoPreview.innerHTML = '';
-      existingPhotosBlock.style.display = editingExistingPhotos.length ? 'block' : 'none';
-
-      editingExistingPhotos.forEach(url => {
-        const item = document.createElement('div');
-        item.className = 'photo-preview-item';
-
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = '';
-
-        item.appendChild(img);
-        existingPhotoPreview.appendChild(item);
-      });
-    }
-
-    async function uploadSelectedPhotos() {
-      const uploaded = [];
-
-      for (const file of selectedFiles) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const path =
-          `propiedades/${Date.now()}-${Math.random().toString(36).slice(2, 9)}-${safeName}`;
-
-        const { error } = await supabaseClient
-          .storage
-          .from('property-photos')
-          .upload(path, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (error) throw error;
-
-        const { data } = supabaseClient
-          .storage
-          .from('property-photos')
-          .getPublicUrl(path);
-
-        if (data && data.publicUrl) {
-          uploaded.push(data.publicUrl);
-        }
-      }
-
-      return uploaded;
-    }
-
-    function fieldNumber(id) {
-      const value = document.getElementById(id).value;
-      return value === '' ? null : Number(value);
-    }
-
-    function propertyPayload(photoUrls) {
-      return {
-        titulo: document.getElementById('f-titulo').value.trim(),
-        tipo: document.getElementById('f-tipo').value,
-        precio: Number(document.getElementById('f-precio').value),
-        moneda: document.getElementById('f-moneda').value,
-        ubicacion: document.getElementById('f-ubicacion').value.trim(),
-        habitaciones: fieldNumber('f-habitaciones'),
-        banos: fieldNumber('f-banos'),
-        metros: fieldNumber('f-metros'),
-        parqueos: fieldNumber('f-parqueos'),
-        descripcion: document.getElementById('f-descripcion').value.trim(),
-        fotos: photoUrls,
-        disponible: true
-      };
-    }
-
-    propertyForm.addEventListener('submit', async event => {
-      event.preventDefault();
-
-      if (!supabaseClient) return;
-
-      submitBtn.disabled = true;
-      formStatus.textContent = selectedFiles.length ? 'Subiendo fotografías…' : 'Guardando…';
-      formStatus.className = 'status-msg';
-
-      try {
-        const { data: sessionData, error: sessionError } =
-          await supabaseClient.auth.getSession();
-
-        if (sessionError) throw sessionError;
-        if (!sessionData || !sessionData.session) {
-          throw new Error('La sesión ha expirado. Inicia sesión nuevamente.');
-        }
-
-        const newPhotoUrls = await uploadSelectedPhotos();
-        const finalPhotos = editingId
-          ? [...editingExistingPhotos, ...newPhotoUrls]
-          : newPhotoUrls;
-
-        const payload = propertyPayload(finalPhotos);
-
-        if (editingId) {
-          const { error } = await supabaseClient
-            .from('propiedades')
-            .update(payload)
-            .eq('id', editingId);
-
-          if (error) throw error;
-
-          formStatus.textContent = '✓ Propiedad actualizada.';
-        } else {
-          const { error } = await supabaseClient
-            .from('propiedades')
-            .insert(payload);
-
-          if (error) throw error;
-
-          formStatus.textContent = '✓ Propiedad publicada.';
-        }
-
-        formStatus.className = 'status-msg success';
-        resetPropertyForm(false);
-        await loadPropertyList();
-      } catch (error) {
-        console.error(error);
-        formStatus.textContent = 'Error: ' + (error.message || 'No fue posible guardar la propiedad.');
-        formStatus.className = 'status-msg error';
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
-    function resetPropertyForm(clearStatus = true) {
-      editingId = null;
-      editingExistingPhotos = [];
-      selectedFiles = [];
-
-      propertyForm.reset();
-      photoInput.value = '';
-      photoPreview.innerHTML = '';
-      existingPhotoPreview.innerHTML = '';
-      newPhotosBlock.style.display = 'none';
-      existingPhotosBlock.style.display = 'none';
-
-      formTitle.textContent = 'Agregar propiedad';
-      submitBtn.textContent = 'Publicar propiedad';
-      cancelEditBtn.style.display = 'none';
-
-      if (clearStatus) {
-        formStatus.textContent = '';
-        formStatus.className = 'status-msg';
-      }
-    }
-
-    cancelEditBtn.addEventListener('click', () => resetPropertyForm());
-
-    function beginEdit(property) {
-      editingId = property.id;
-      editingExistingPhotos = Array.isArray(property.fotos)
-        ? property.fotos.filter(Boolean)
-        : [];
-      selectedFiles = [];
-
-      document.getElementById('f-titulo').value = property.titulo || '';
-      document.getElementById('f-tipo').value = property.tipo || 'renta';
-      document.getElementById('f-precio').value = property.precio ?? '';
-      document.getElementById('f-moneda').value = property.moneda || 'Q';
-      document.getElementById('f-ubicacion').value = property.ubicacion || '';
-      document.getElementById('f-habitaciones').value = property.habitaciones ?? '';
-      document.getElementById('f-banos').value = property.banos ?? '';
-      document.getElementById('f-metros').value = property.metros ?? '';
-      document.getElementById('f-parqueos').value = property.parqueos ?? '';
-      document.getElementById('f-descripcion').value = property.descripcion || '';
-
-      photoInput.value = '';
-      renderSelectedPhotos();
-      renderExistingPhotos();
-
-      formTitle.textContent = 'Editar propiedad';
-      submitBtn.textContent = 'Guardar cambios';
-      cancelEditBtn.style.display = 'inline-flex';
-      formStatus.textContent = '';
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function loadPropertyList() {
-      if (!supabaseClient) return;
-
-      propertyList.innerHTML = '<p class="muted">Cargando propiedades…</p>';
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('propiedades')
-          .select('*');
-
-        if (error) throw error;
-
-        loadedProperties = Array.isArray(data) ? data : [];
-
-        loadedProperties.sort((a, b) => {
-          const aTime = a.creado ? new Date(a.creado).getTime() : 0;
-          const bTime = b.creado ? new Date(b.creado).getTime() : 0;
-          return (bTime || 0) - (aTime || 0);
-        });
-
-        if (!loadedProperties.length) {
-          propertyList.innerHTML = '<p class="muted">Todavía no hay propiedades publicadas.</p>';
-          return;
-        }
-
-        propertyList.innerHTML = loadedProperties.map(property => {
-          const photos = Array.isArray(property.fotos) ? property.fotos.filter(Boolean) : [];
-          const image = photos.length
-            ? `<img src="${escapeHtml(photos[0])}" alt="">`
-            : `<div class="property-row-placeholder">Sin foto</div>`;
-
-          return `
-            <article class="property-row" data-property-id="${escapeHtml(property.id)}">
-              ${image}
-
-              <div class="property-row-main">
-                <h3>${escapeHtml(property.titulo || 'Sin título')}</h3>
-                <p>${escapeHtml(property.ubicacion || '')}</p>
-                <span>${escapeHtml(property.moneda || 'Q')} ${Number(property.precio || 0).toLocaleString('es-GT')}</span>
-              </div>
-
-              <div class="property-row-actions">
-                <button
-                  type="button"
-                  class="availability-toggle ${property.disponible ? 'available' : 'unavailable'}"
-                  data-action="toggle"
-                  data-id="${escapeHtml(property.id)}"
-                  data-current="${property.disponible ? 'true' : 'false'}"
-                >
-                  ${property.disponible ? 'Disponible' : 'No disponible'}
-                </button>
-
-                <button class="btn btn-secondary btn-small" type="button" data-action="edit" data-id="${escapeHtml(property.id)}">
-                  Editar
-                </button>
-
-                <button class="btn btn-danger btn-small" type="button" data-action="delete" data-id="${escapeHtml(property.id)}">
-                  Eliminar
-                </button>
-              </div>
-            </article>`;
-        }).join('');
-      } catch (error) {
-        console.error(error);
-        propertyList.innerHTML = `
-          <div class="status-card status-error">
-            <strong>No se pudieron cargar las propiedades.</strong>
-            <span>${escapeHtml(error.message || '')}</span>
-          </div>`;
-      }
-    }
-
-    propertyList.addEventListener('click', async event => {
-      const button = event.target.closest('[data-action]');
-      if (!button) return;
-
-      const action = button.dataset.action;
-      const id = button.dataset.id;
-      const property = loadedProperties.find(item => String(item.id) === String(id));
-
-      if (action === 'edit' && property) {
-        beginEdit(property);
-        return;
-      }
-
-      if (action === 'toggle') {
-        const current = button.dataset.current === 'true';
-
-        try {
-          button.disabled = true;
-
-          const { error } = await supabaseClient
-            .from('propiedades')
-            .update({ disponible: !current })
-            .eq('id', id);
-
-          if (error) throw error;
-          await loadPropertyList();
-        } catch (error) {
-          console.error(error);
-          alert('No fue posible cambiar la disponibilidad: ' + (error.message || ''));
-        } finally {
-          button.disabled = false;
-        }
-
-        return;
-      }
-
-      if (action === 'delete') {
-        const confirmed = confirm('¿Eliminar esta propiedad permanentemente?');
-        if (!confirmed) return;
-
-        try {
-          button.disabled = true;
-
-          const { error } = await supabaseClient
-            .from('propiedades')
-            .delete()
-            .eq('id', id);
-
-          if (error) throw error;
-
-          if (String(editingId) === String(id)) {
-            resetPropertyForm();
-          }
-
-          await loadPropertyList();
-        } catch (error) {
-          console.error(error);
-          alert('No fue posible eliminar la propiedad: ' + (error.message || ''));
-        } finally {
-          button.disabled = false;
-        }
-      }
-    });
-
-    refreshListBtn.addEventListener('click', loadPropertyList);
-
-    initBranding();
-    initSupabase();
-    checkInitialSession();
-
-    if (supabaseClient) {
-      supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_OUT') showLogin();
-        if (event === 'SIGNED_IN' && session) showAdmin();
-      });
-    }
-  </script>
+  });
+} catch (error) {
+  setStatus(qs('loginStatus'), error.message, 'error');
+  qs('loginBtn').disabled = true;
+}
+</script>
 </body>
 </html>
