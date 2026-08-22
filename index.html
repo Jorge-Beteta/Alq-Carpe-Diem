@@ -1,188 +1,1732 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alquileres Carpe Diem — Propiedades disponibles</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Alquileres Carpe Diem — Propiedades disponibles
+  </title>
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
 </head>
+
+
 <body>
 
+
+<!-- =========================================================
+     ENCABEZADO
+========================================================= -->
+
 <header class="site-header">
+
   <div class="container header-inner">
+
     <div class="brand">
-      <div class="brand-mark">CD</div>
-      <div class="brand-text">
-        <h1 id="brandName">Alquileres Carpe Diem</h1>
-        <span>Propiedades seleccionadas</span>
+
+      <div class="brand-mark">
+        CD
       </div>
+
+      <div class="brand-text">
+
+        <h1 id="brandName">
+          Alquileres Carpe Diem
+        </h1>
+
+        <span>
+          Propiedades seleccionadas
+        </span>
+
+      </div>
+
     </div>
+
+
     <div class="header-actions">
-      <a href="admin.html">Acceso agente</a>
+
+      <a href="admin.html">
+        Acceso agente
+      </a>
+
     </div>
+
   </div>
+
 </header>
 
+
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
 <section class="hero">
+
   <div class="container">
-    <h2>Encuentra tu próximo hogar</h2>
-    <p>Catálogo actualizado de propiedades disponibles para renta y venta.</p>
+
+    <h2>
+      Encuentra tu próximo hogar
+    </h2>
+
+    <p>
+      Catálogo actualizado de propiedades disponibles
+      para renta y venta.
+    </p>
+
   </div>
+
 </section>
+
+
+
+<!-- =========================================================
+     FILTROS
+========================================================= -->
 
 <div class="container">
-  <div class="filters" id="filters">
-    <button class="filter-btn active" data-filter="todas">Todas</button>
-    <button class="filter-btn" data-filter="renta">En renta</button>
-    <button class="filter-btn" data-filter="venta">En venta</button>
+
+  <div
+    class="filters"
+    id="filters"
+  >
+
+    <button
+      class="filter-btn active"
+      data-filter="todas"
+    >
+      Todas
+    </button>
+
+    <button
+      class="filter-btn"
+      data-filter="renta"
+    >
+      En renta
+    </button>
+
+    <button
+      class="filter-btn"
+      data-filter="venta"
+    >
+      En venta
+    </button>
+
   </div>
+
 </div>
 
+
+
+<!-- =========================================================
+     CATÁLOGO
+========================================================= -->
+
 <section class="catalog">
+
   <div class="container">
-    <div class="grid" id="grid"></div>
-    <div class="empty-state" id="emptyState" style="display:none;">
-      <p>No hay propiedades disponibles en esta categoría por el momento.</p>
+
+
+    <!-- Mensajes de carga / errores -->
+
+    <div
+      id="catalogStatus"
+      style="
+        text-align:center;
+        padding:30px 15px;
+        color:#a89e88;
+      "
+    >
+      Cargando propiedades...
     </div>
+
+
+    <!-- Grid de propiedades -->
+
+    <div
+      class="grid"
+      id="grid"
+    ></div>
+
+
+    <!-- Estado vacío -->
+
+    <div
+      class="empty-state"
+      id="emptyState"
+      style="display:none;"
+    >
+
+      <p>
+        No hay propiedades disponibles en esta categoría
+        por el momento.
+      </p>
+
+    </div>
+
   </div>
+
 </section>
 
+
+
+<!-- =========================================================
+     PIE DE PÁGINA
+========================================================= -->
+
 <footer>
+
   <div class="container">
-    <p id="footerText">Alquileres Carpe Diem — Todas las propiedades sujetas a disponibilidad.</p>
+
+    <p id="footerText">
+      Alquileres Carpe Diem —
+      Todas las propiedades sujetas a disponibilidad.
+    </p>
+
   </div>
+
 </footer>
+
+
+
+<!-- =========================================================
+     MODAL
+========================================================= -->
 
 <div id="modalRoot"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script>
-document.getElementById('brandName').textContent = CONTACTO.nombreNegocio;
-document.getElementById('footerText').textContent = `${CONTACTO.nombreNegocio} — Todas las propiedades sujetas a disponibilidad.`;
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+<!-- =========================================================
+     SUPABASE
+========================================================= -->
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-config.js"></script>
+
+
+
+<script>
+
+/* ============================================================
+   ELEMENTOS
+============================================================ */
+
+const grid =
+  document.getElementById('grid');
+
+const emptyState =
+  document.getElementById('emptyState');
+
+const modalRoot =
+  document.getElementById('modalRoot');
+
+const catalogStatus =
+  document.getElementById('catalogStatus');
+
 
 let allProperties = [];
+
 let currentFilter = 'todas';
 
-const grid = document.getElementById('grid');
-const emptyState = document.getElementById('emptyState');
-const modalRoot = document.getElementById('modalRoot');
+let supabaseClient = null;
 
-function formatPrice(price, currency) {
-  const num = Number(price).toLocaleString('es-GT');
-  return `${currency || 'Q'} ${num}`;
+
+
+/* ============================================================
+   DATOS DEL NEGOCIO
+============================================================ */
+
+try {
+
+  if (
+    typeof CONTACTO !== 'undefined' &&
+    CONTACTO
+  ) {
+
+    if (CONTACTO.nombreNegocio) {
+
+      document.getElementById(
+        'brandName'
+      ).textContent =
+        CONTACTO.nombreNegocio;
+
+
+      document.getElementById(
+        'footerText'
+      ).textContent =
+        `${CONTACTO.nombreNegocio} — Todas las propiedades sujetas a disponibilidad.`;
+
+    }
+
+  }
+
+} catch (error) {
+
+  console.warn(
+    'No fue posible cargar la información del negocio:',
+    error
+  );
+
 }
+
+
+
+/* ============================================================
+   INICIALIZAR SUPABASE
+============================================================ */
+
+try {
+
+
+  /*
+    Verificar librería
+  */
+
+  if (
+    typeof window.supabase === 'undefined' ||
+    !window.supabase.createClient
+  ) {
+
+    throw new Error(
+      'No se pudo cargar la librería de Supabase.'
+    );
+
+  }
+
+
+  /*
+    Verificar URL
+  */
+
+  if (
+    typeof SUPABASE_URL === 'undefined' ||
+    !SUPABASE_URL
+  ) {
+
+    throw new Error(
+      'No se encontró SUPABASE_URL.'
+    );
+
+  }
+
+
+  /*
+    Verificar clave pública
+  */
+
+  if (
+    typeof SUPABASE_ANON_KEY === 'undefined' ||
+    !SUPABASE_ANON_KEY
+  ) {
+
+    throw new Error(
+      'No se encontró SUPABASE_ANON_KEY.'
+    );
+
+  }
+
+
+  /*
+    Crear cliente
+  */
+
+  supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+
+  console.log(
+    'Supabase conectado correctamente.'
+  );
+
+
+} catch (error) {
+
+
+  console.error(
+    'Error inicializando Supabase:',
+    error
+  );
+
+
+  catalogStatus.innerHTML = `
+
+    <p style="color:#b55353;">
+      No fue posible conectar con la base de datos.
+    </p>
+
+    <p style="
+      font-size:13px;
+      margin-top:8px;
+    ">
+      ${error.message || ''}
+    </p>
+
+  `;
+
+}
+
+
+
+/* ============================================================
+   UTILIDADES
+============================================================ */
+
+function formatPrice(
+  price,
+  currency
+) {
+
+  const numero =
+    Number(price || 0);
+
+
+  const formatted =
+    numero.toLocaleString(
+      'es-GT'
+    );
+
+
+  return `${
+    currency || 'Q'
+  } ${formatted}`;
+
+}
+
+
+
+/*
+  Evita que textos almacenados en Supabase
+  puedan introducir HTML accidentalmente.
+*/
+
+function escapeHtml(value) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return '';
+
+  }
+
+
+  return String(value)
+    .replace(
+      /&/g,
+      '&amp;'
+    )
+    .replace(
+      /</g,
+      '&lt;'
+    )
+    .replace(
+      />/g,
+      '&gt;'
+    )
+    .replace(
+      /"/g,
+      '&quot;'
+    )
+    .replace(
+      /'/g,
+      '&#039;'
+    );
+
+}
+
+
+
+/*
+  Validar URLs de imágenes
+*/
+
+function safeImageUrl(url) {
+
+  if (!url) {
+
+    return '';
+
+  }
+
+
+  try {
+
+    const parsed =
+      new URL(url);
+
+
+    if (
+      parsed.protocol === 'https:' ||
+      parsed.protocol === 'http:'
+    ) {
+
+      return url;
+
+    }
+
+  } catch (error) {
+
+    console.warn(
+      'URL de imagen inválida:',
+      url
+    );
+
+  }
+
+
+  return '';
+
+}
+
+
+
+/*
+  Detectar si una propiedad está disponible.
+
+  Esto acepta:
+  true
+  "true"
+  1
+  "1"
+
+  para evitar problemas si el campo fue creado
+  originalmente con otro formato.
+*/
+
+function isAvailable(property) {
+
+  const value =
+    property.disponible;
+
+
+  return (
+    value === true ||
+    value === 'true' ||
+    value === 1 ||
+    value === '1'
+  );
+
+}
+
+
+
+/* ============================================================
+   MOSTRAR PROPIEDADES
+============================================================ */
 
 function renderGrid() {
-  const filtered = currentFilter === 'todas'
-    ? allProperties
-    : allProperties.filter(p => p.tipo === currentFilter);
+
+
+  /*
+    Aplicar filtro
+  */
+
+  const filtered =
+    currentFilter === 'todas'
+
+      ? allProperties
+
+      : allProperties.filter(
+          property =>
+            property.tipo ===
+            currentFilter
+        );
+
+
+  /*
+    Limpiar grid
+  */
 
   grid.innerHTML = '';
-  emptyState.style.display = filtered.length === 0 ? 'block' : 'none';
 
-  filtered.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    const mainPhoto = (p.fotos && p.fotos[0]) || '';
-    card.innerHTML = `
-      <div class="card-img" style="background-image:url('${mainPhoto}')">
-        <div class="card-price-tag">${formatPrice(p.precio, p.moneda)}${p.tipo === 'renta' ? '/mes' : ''}</div>
-      </div>
-      <div class="card-body">
-        <h3>${p.titulo || 'Propiedad'}</h3>
-        <div class="card-loc">📍 ${p.ubicacion || ''}</div>
-        <div class="card-specs">
-          <span><strong>${p.habitaciones ?? '—'}</strong> hab.</span>
-          <span><strong>${p.banos ?? '—'}</strong> baños</span>
-          <span><strong>${p.metros ?? '—'}</strong> m²</span>
-        </div>
-      </div>
-    `;
-    card.addEventListener('click', () => openModal(p));
-    grid.appendChild(card);
-  });
+
+  /*
+    No hay resultados
+  */
+
+  if (
+    filtered.length === 0
+  ) {
+
+    emptyState.style.display =
+      'block';
+
+    return;
+
+  }
+
+
+  emptyState.style.display =
+    'none';
+
+
+  /*
+    Crear tarjetas
+  */
+
+  filtered.forEach(
+    property => {
+
+
+      const card =
+        document.createElement(
+          'div'
+        );
+
+
+      card.className =
+        'card';
+
+
+      /*
+        Primera fotografía
+      */
+
+      const mainPhoto =
+        (
+          Array.isArray(
+            property.fotos
+          ) &&
+          property.fotos.length > 0
+        )
+
+          ? safeImageUrl(
+              property.fotos[0]
+            )
+
+          : '';
+
+
+      /*
+        Imagen
+      */
+
+      const cardImage =
+        document.createElement(
+          'div'
+        );
+
+
+      cardImage.className =
+        'card-img';
+
+
+      if (mainPhoto) {
+
+        cardImage.style.backgroundImage =
+          `url("${mainPhoto}")`;
+
+      }
+
+
+      /*
+        Precio
+      */
+
+      const priceTag =
+        document.createElement(
+          'div'
+        );
+
+
+      priceTag.className =
+        'card-price-tag';
+
+
+      priceTag.textContent =
+        formatPrice(
+          property.precio,
+          property.moneda
+        ) +
+        (
+          property.tipo === 'renta'
+            ? '/mes'
+            : ''
+        );
+
+
+      cardImage.appendChild(
+        priceTag
+      );
+
+
+      /*
+        Contenido
+      */
+
+      const body =
+        document.createElement(
+          'div'
+        );
+
+
+      body.className =
+        'card-body';
+
+
+      const title =
+        document.createElement(
+          'h3'
+        );
+
+
+      title.textContent =
+        property.titulo ||
+        'Propiedad';
+
+
+      const location =
+        document.createElement(
+          'div'
+        );
+
+
+      location.className =
+        'card-loc';
+
+
+      location.textContent =
+        `📍 ${
+          property.ubicacion || ''
+        }`;
+
+
+      /*
+        Características
+      */
+
+      const specs =
+        document.createElement(
+          'div'
+        );
+
+
+      specs.className =
+        'card-specs';
+
+
+      specs.innerHTML = `
+
+        <span>
+          <strong>
+            ${
+              property.habitaciones ??
+              '—'
+            }
+          </strong>
+          hab.
+        </span>
+
+        <span>
+          <strong>
+            ${
+              property.banos ??
+              '—'
+            }
+          </strong>
+          baños
+        </span>
+
+        <span>
+          <strong>
+            ${
+              property.metros ??
+              '—'
+            }
+          </strong>
+          m²
+        </span>
+
+      `;
+
+
+      body.appendChild(
+        title
+      );
+
+
+      body.appendChild(
+        location
+      );
+
+
+      body.appendChild(
+        specs
+      );
+
+
+      card.appendChild(
+        cardImage
+      );
+
+
+      card.appendChild(
+        body
+      );
+
+
+      /*
+        Abrir detalle
+      */
+
+      card.addEventListener(
+        'click',
+        () => {
+
+          openModal(
+            property
+          );
+
+        }
+      );
+
+
+      grid.appendChild(
+        card
+      );
+
+    }
+  );
+
 }
 
-function openModal(p) {
-  const fotos = (p.fotos && p.fotos.length) ? p.fotos : [''];
-  const galleryHtml = fotos.map(f => `<img src="${f}" alt="${p.titulo || ''}">`).join('');
 
-  const waMsg = encodeURIComponent(`Hola, me interesa la propiedad "${p.titulo}" (${formatPrice(p.precio, p.moneda)}). ¿Podrían darme más información?`);
-  const waLink = `https://wa.me/${CONTACTO.whatsapp}?text=${waMsg}`;
-  const mailLink = `mailto:${CONTACTO.correo}?subject=${encodeURIComponent('Interés en propiedad: ' + p.titulo)}`;
+
+/* ============================================================
+   MODAL DE PROPIEDAD
+============================================================ */
+
+function openModal(property) {
+
+
+  /*
+    Fotos
+  */
+
+  let fotos = [];
+
+
+  if (
+    Array.isArray(
+      property.fotos
+    )
+  ) {
+
+    fotos =
+      property.fotos
+        .map(
+          safeImageUrl
+        )
+        .filter(
+          Boolean
+        );
+
+  }
+
+
+  const galleryHtml =
+    fotos
+      .map(
+        foto => `
+
+          <img
+            src="${escapeHtml(foto)}"
+            alt="${escapeHtml(
+              property.titulo ||
+              'Propiedad'
+            )}"
+          >
+
+        `
+      )
+      .join('');
+
+
+  /*
+    WhatsApp
+  */
+
+  const businessWhatsApp =
+    (
+      typeof CONTACTO !==
+      'undefined'
+    )
+
+      ? CONTACTO.whatsapp || ''
+
+      : '';
+
+
+  const businessEmail =
+    (
+      typeof CONTACTO !==
+      'undefined'
+    )
+
+      ? CONTACTO.correo || ''
+
+      : '';
+
+
+  const message =
+    `Hola, me interesa la propiedad "${
+      property.titulo ||
+      'Propiedad'
+    }" (${
+      formatPrice(
+        property.precio,
+        property.moneda
+      )
+    }). ¿Podrían darme más información?`;
+
+
+  const whatsappLink =
+    businessWhatsApp
+
+      ? `https://wa.me/${
+          businessWhatsApp
+        }?text=${
+          encodeURIComponent(
+            message
+          )
+        }`
+
+      : '#';
+
+
+  const emailLink =
+    businessEmail
+
+      ? `mailto:${
+          businessEmail
+        }?subject=${
+          encodeURIComponent(
+            'Interés en propiedad: ' +
+            (
+              property.titulo ||
+              'Propiedad'
+            )
+          )
+        }`
+
+      : '#';
+
+
+  /*
+    Construir modal
+  */
 
   modalRoot.innerHTML = `
-    <div class="modal-overlay" id="modalOverlay">
+
+    <div
+      class="modal-overlay"
+      id="modalOverlay"
+    >
+
       <div class="modal">
-        <div class="modal-close"><button id="modalCloseBtn">✕</button></div>
-        <div class="modal-gallery">${galleryHtml}</div>
-        <div class="modal-body">
-          <h2>${p.titulo || 'Propiedad'}</h2>
-          <div class="modal-price">${formatPrice(p.precio, p.moneda)}${p.tipo === 'renta' ? ' / mes' : ''}</div>
-          <div class="modal-specs">
-            <div class="spec-item"><strong>${p.habitaciones ?? '—'}</strong><span>Habitaciones</span></div>
-            <div class="spec-item"><strong>${p.banos ?? '—'}</strong><span>Baños</span></div>
-            <div class="spec-item"><strong>${p.metros ?? '—'}</strong><span>m² construcción</span></div>
-            <div class="spec-item"><strong>${p.parqueos ?? '—'}</strong><span>Parqueos</span></div>
-          </div>
-          <p class="modal-desc">${p.descripcion || ''}</p>
-          <div class="contact-actions">
-            <a class="btn btn-whatsapp" href="${waLink}" target="_blank" rel="noopener">💬 Consultar por WhatsApp</a>
-            <a class="btn btn-email" href="${mailLink}">✉️ Escribir por correo</a>
-          </div>
+
+
+        <div class="modal-close">
+
+          <button
+            id="modalCloseBtn"
+            type="button"
+          >
+            ✕
+          </button>
+
         </div>
+
+
+        ${
+          galleryHtml
+
+            ? `
+              <div class="modal-gallery">
+                ${galleryHtml}
+              </div>
+            `
+
+            : ''
+        }
+
+
+        <div class="modal-body">
+
+
+          <h2>
+            ${
+              escapeHtml(
+                property.titulo ||
+                'Propiedad'
+              )
+            }
+          </h2>
+
+
+          <div class="modal-price">
+
+            ${
+              escapeHtml(
+                formatPrice(
+                  property.precio,
+                  property.moneda
+                )
+              )
+            }
+
+            ${
+              property.tipo ===
+              'renta'
+
+                ? ' / mes'
+
+                : ''
+            }
+
+          </div>
+
+
+          <div class="modal-specs">
+
+
+            <div class="spec-item">
+
+              <strong>
+                ${
+                  escapeHtml(
+                    property.habitaciones ??
+                    '—'
+                  )
+                }
+              </strong>
+
+              <span>
+                Habitaciones
+              </span>
+
+            </div>
+
+
+            <div class="spec-item">
+
+              <strong>
+                ${
+                  escapeHtml(
+                    property.banos ??
+                    '—'
+                  )
+                }
+              </strong>
+
+              <span>
+                Baños
+              </span>
+
+            </div>
+
+
+            <div class="spec-item">
+
+              <strong>
+                ${
+                  escapeHtml(
+                    property.metros ??
+                    '—'
+                  )
+                }
+              </strong>
+
+              <span>
+                m² construcción
+              </span>
+
+            </div>
+
+
+            <div class="spec-item">
+
+              <strong>
+                ${
+                  escapeHtml(
+                    property.parqueos ??
+                    '—'
+                  )
+                }
+              </strong>
+
+              <span>
+                Parqueos
+              </span>
+
+            </div>
+
+
+          </div>
+
+
+          ${
+            property.ubicacion
+
+              ? `
+
+                <p
+                  style="
+                    margin-bottom:15px;
+                  "
+                >
+                  📍 ${
+                    escapeHtml(
+                      property.ubicacion
+                    )
+                  }
+                </p>
+
+              `
+
+              : ''
+          }
+
+
+          <p class="modal-desc">
+
+            ${
+              escapeHtml(
+                property.descripcion ||
+                ''
+              )
+            }
+
+          </p>
+
+
+          <div class="contact-actions">
+
+
+            ${
+              businessWhatsApp
+
+                ? `
+
+                  <a
+                    class="btn btn-whatsapp"
+                    href="${escapeHtml(
+                      whatsappLink
+                    )}"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    💬 Consultar por WhatsApp
+                  </a>
+
+                `
+
+                : ''
+            }
+
+
+            ${
+              businessEmail
+
+                ? `
+
+                  <a
+                    class="btn btn-email"
+                    href="${escapeHtml(
+                      emailLink
+                    )}"
+                  >
+                    ✉️ Escribir por correo
+                  </a>
+
+                `
+
+                : ''
+            }
+
+
+          </div>
+
+
+        </div>
+
       </div>
+
     </div>
+
   `;
-  document.getElementById('modalOverlay').addEventListener('click', (e) => {
-    if (e.target.id === 'modalOverlay') closeModal();
-  });
-  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+
+
+  /*
+    Cerrar al tocar fuera
+  */
+
+  document
+    .getElementById(
+      'modalOverlay'
+    )
+    .addEventListener(
+      'click',
+      event => {
+
+        if (
+          event.target.id ===
+          'modalOverlay'
+        ) {
+
+          closeModal();
+
+        }
+
+      }
+    );
+
+
+  /*
+    Botón cerrar
+  */
+
+  document
+    .getElementById(
+      'modalCloseBtn'
+    )
+    .addEventListener(
+      'click',
+      closeModal
+    );
+
 }
+
+
+
+/* ============================================================
+   CERRAR MODAL
+============================================================ */
 
 function closeModal() {
-  modalRoot.innerHTML = '';
+
+  modalRoot.innerHTML =
+    '';
+
 }
 
-document.getElementById('filters').addEventListener('click', (e) => {
-  if (!e.target.classList.contains('filter-btn')) return;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-  currentFilter = e.target.dataset.filter;
-  renderGrid();
-});
+
+
+/* ============================================================
+   FILTROS
+============================================================ */
+
+document
+  .getElementById(
+    'filters'
+  )
+  .addEventListener(
+    'click',
+    event => {
+
+
+      if (
+        !event.target.classList.contains(
+          'filter-btn'
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      document
+        .querySelectorAll(
+          '.filter-btn'
+        )
+        .forEach(
+          button => {
+
+            button.classList.remove(
+              'active'
+            );
+
+          }
+        );
+
+
+      event.target.classList.add(
+        'active'
+      );
+
+
+      currentFilter =
+        event.target.dataset.filter;
+
+
+      renderGrid();
+
+    }
+  );
+
+
+
+/* ============================================================
+   CARGAR PROPIEDADES DESDE SUPABASE
+============================================================ */
 
 async function loadProperties() {
-  const { data, error } = await supabase
-    .from('propiedades')
-    .select('*')
-    .eq('disponible', true)
-    .order('creado', { ascending: false });
 
-  if (error) {
-    console.error('Error cargando propiedades:', error);
-    grid.innerHTML = '<p style="color:#a89e88;grid-column:1/-1;text-align:center;padding:40px;">No se pudieron cargar las propiedades. Verifica la configuración de Supabase.</p>';
+
+  /*
+    Verificar conexión
+  */
+
+  if (!supabaseClient) {
+
+    catalogStatus.style.display =
+      'block';
+
+
+    catalogStatus.innerHTML = `
+
+      <p style="color:#b55353;">
+        No fue posible conectar con Supabase.
+      </p>
+
+    `;
+
+
     return;
+
   }
-  allProperties = data;
-  renderGrid();
+
+
+  /*
+    Mostrar carga
+  */
+
+  catalogStatus.style.display =
+    'block';
+
+
+  catalogStatus.innerHTML = `
+
+    <p>
+      Cargando propiedades...
+    </p>
+
+  `;
+
+
+  grid.innerHTML =
+    '';
+
+
+  emptyState.style.display =
+    'none';
+
+
+  try {
+
+
+    /*
+      IMPORTANTE:
+
+      Consultamos la tabla completa sin depender
+      de "creado" ni de filtros adicionales.
+
+      Las políticas RLS de Supabase siguen
+      controlando qué registros puede leer
+      un visitante público.
+    */
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from('propiedades')
+        .select('*');
+
+
+    /*
+      Error devuelto por Supabase
+    */
+
+    if (error) {
+
+
+      console.error(
+        'Error cargando propiedades:',
+        error
+      );
+
+
+      catalogStatus.innerHTML = `
+
+        <p style="color:#b55353;">
+          No se pudieron cargar las propiedades.
+        </p>
+
+        <p style="
+          font-size:13px;
+          margin-top:8px;
+          color:#777;
+        ">
+          ${
+            escapeHtml(
+              error.message ||
+              'Error desconocido de Supabase'
+            )
+          }
+        </p>
+
+      `;
+
+
+      return;
+
+    }
+
+
+    /*
+      Diagnóstico en consola
+    */
+
+    console.log(
+      'Datos recibidos de Supabase:',
+      data
+    );
+
+
+    /*
+      No llegaron registros
+    */
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+
+
+      allProperties =
+        [];
+
+
+      catalogStatus.style.display =
+        'none';
+
+
+      grid.innerHTML =
+        '';
+
+
+      emptyState.style.display =
+        'block';
+
+
+      return;
+
+    }
+
+
+    /*
+      Filtrar únicamente propiedades
+      disponibles
+    */
+
+    allProperties =
+      data.filter(
+        isAvailable
+      );
+
+
+    /*
+      Ordenar por fecha si la columna
+      "creado" existe.
+
+      Si no existe, no ocurre ningún error.
+    */
+
+    allProperties.sort(
+      (
+        a,
+        b
+      ) => {
+
+
+        if (
+          !a.creado ||
+          !b.creado
+        ) {
+
+          return 0;
+
+        }
+
+
+        const dateA =
+          new Date(
+            a.creado
+          );
+
+
+        const dateB =
+          new Date(
+            b.creado
+          );
+
+
+        if (
+          isNaN(
+            dateA.getTime()
+          ) ||
+          isNaN(
+            dateB.getTime()
+          )
+        ) {
+
+          return 0;
+
+        }
+
+
+        return (
+          dateB -
+          dateA
+        );
+
+      }
+    );
+
+
+    /*
+      Ocultar mensaje de carga
+    */
+
+    catalogStatus.style.display =
+      'none';
+
+
+    /*
+      Mostrar
+    */
+
+    renderGrid();
+
+
+  } catch (error) {
+
+
+    console.error(
+      'Error inesperado cargando propiedades:',
+      error
+    );
+
+
+    catalogStatus.style.display =
+      'block';
+
+
+    catalogStatus.innerHTML = `
+
+      <p style="color:#b55353;">
+        Error conectando con la base de datos.
+      </p>
+
+      <p style="
+        font-size:13px;
+        margin-top:8px;
+        color:#777;
+      ">
+        ${
+          escapeHtml(
+            error.message ||
+            'No fue posible consultar Supabase.'
+          )
+        }
+      </p>
+
+    `;
+
+  }
+
 }
+
+
+
+/* ============================================================
+   CARGA INICIAL
+============================================================ */
 
 loadProperties();
 
-// Se actualiza en tiempo real cuando el agente publica o cambia algo
-supabase
-  .channel('propiedades-cambios')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'propiedades' }, () => {
-    loadProperties();
-  })
-  .subscribe();
+
+
+/* ============================================================
+   ACTUALIZACIÓN EN TIEMPO REAL
+============================================================ */
+
+if (supabaseClient) {
+
+
+  try {
+
+
+    supabaseClient
+      .channel(
+        'propiedades-cambios'
+      )
+      .on(
+        'postgres_changes',
+
+        {
+
+          event:
+            '*',
+
+          schema:
+            'public',
+
+          table:
+            'propiedades'
+
+        },
+
+        payload => {
+
+
+          console.log(
+            'Cambio detectado en propiedades:',
+            payload
+          );
+
+
+          /*
+            Volver a consultar la base de datos
+          */
+
+          loadProperties();
+
+        }
+      )
+      .subscribe(
+        status => {
+
+          console.log(
+            'Estado Realtime:',
+            status
+          );
+
+        }
+      );
+
+
+  } catch (error) {
+
+
+    /*
+      Si Realtime no está habilitado,
+      el sitio sigue funcionando normalmente.
+    */
+
+    console.warn(
+      'Realtime no pudo iniciarse:',
+      error
+    );
+
+  }
+
+}
+
+
+
+/* ============================================================
+   RECARGAR AL REGRESAR DEL PANEL ADMINISTRATIVO
+============================================================ */
+
+/*
+  Algunos navegadores guardan la página principal
+  en memoria cuando entras al panel admin.
+
+  Al regresar con "Atrás", la página puede aparecer
+  exactamente como estaba antes.
+
+  Este listener obliga a consultar Supabase nuevamente.
+*/
+
+window.addEventListener(
+  'pageshow',
+  event => {
+
+
+    if (
+      event.persisted
+    ) {
+
+      console.log(
+        'Página restaurada desde caché. Actualizando propiedades...'
+      );
+
+
+      loadProperties();
+
+    }
+
+  }
+);
+
+
+
+/*
+  También actualizar cuando la pestaña
+  vuelve a estar visible.
+*/
+
+document.addEventListener(
+  'visibilitychange',
+  () => {
+
+
+    if (
+      document.visibilityState ===
+      'visible'
+    ) {
+
+      loadProperties();
+
+    }
+
+  }
+);
+
 </script>
 
+
 </body>
+
 </html>
