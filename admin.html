@@ -52,7 +52,36 @@
         </div>
 
         <button id="loginBtn" class="btn btn-primary btn-full" type="submit">Entrar</button>
+        <button id="forgotPasswordBtn" class="link-button" type="button">¿Olvidaste tu contraseña?</button>
         <p id="loginStatus" class="status-msg"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- PASSWORD RECOVERY -->
+  <section id="recoveryView" class="login-shell" style="display:none;">
+    <div class="admin-card login-card">
+      <span class="eyebrow">Seguridad</span>
+      <h2>Crear nueva contraseña</h2>
+      <p class="muted">Escribe una nueva contraseña para tu cuenta.</p>
+
+      <form id="recoveryForm">
+        <div class="field">
+          <label for="recoveryPassword">Nueva contraseña</label>
+          <input id="recoveryPassword" type="password" autocomplete="new-password"
+                 minlength="6" required>
+        </div>
+
+        <div class="field">
+          <label for="recoveryPasswordConfirm">Confirmar contraseña</label>
+          <input id="recoveryPasswordConfirm" type="password" autocomplete="new-password"
+                 minlength="6" required>
+        </div>
+
+        <button id="recoveryBtn" class="btn btn-primary btn-full" type="submit">
+          Cambiar contraseña
+        </button>
+        <p id="recoveryStatus" class="status-msg"></p>
       </form>
     </div>
   </section>
@@ -611,6 +640,44 @@ function initializeSupabase() {
     throw new Error('Falta la configuración de Supabase.');
   }
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+function isRecoveryUrl() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  const combined = `${hash}&${search}`.toLowerCase();
+  return combined.includes('type=recovery') ||
+         combined.includes('type%3drecovery');
+}
+
+function showRecoveryView() {
+  qs('loginView').style.display = 'none';
+  qs('recoveryView').style.display = 'block';
+  qs('appView').style.display = 'none';
+  qs('logoutBtn').style.display = 'none';
+  qs('recoveryPassword').focus();
+}
+
+function showLoginView(message = '', type = '') {
+  qs('recoveryView').style.display = 'none';
+  qs('appView').style.display = 'none';
+  qs('loginView').style.display = 'block';
+  if (message) setStatus(qs('loginStatus'), message, type);
+}
+
+function clearRecoveryUrl() {
+  try {
+    const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+    window.history.replaceState({}, document.title, cleanUrl);
+  } catch (e) {
+    console.warn('No fue posible limpiar la URL de recuperación.', e);
+  }
+}
+
+async function updatePassword(password) {
+  const { data, error } = await db.auth.updateUser({ password });
+  if (error) throw error;
+  return data;
 }
 
 async function login(email, password) {
@@ -1395,6 +1462,55 @@ async function saveProfile(event) {
   setStatus(qs('profileStatus'), '✓ Perfil actualizado.', 'success');
 }
 
+qs('recoveryForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const status = qs('recoveryStatus');
+  const button = qs('recoveryBtn');
+  const password = qs('recoveryPassword').value;
+  const confirmation = qs('recoveryPasswordConfirm').value;
+
+  setStatus(status, '');
+
+  if (password.length < 6) {
+    setStatus(status, 'La contraseña debe tener al menos 6 caracteres.', 'error');
+    return;
+  }
+
+  if (password !== confirmation) {
+    setStatus(status, 'Las contraseñas no coinciden.', 'error');
+    return;
+  }
+
+  button.disabled = true;
+  setStatus(status, 'Actualizando contraseña...');
+
+  try {
+    await updatePassword(password);
+    setStatus(status, '✓ Contraseña actualizada. Redirigiendo...', 'success');
+
+    // Cerramos la sesión para que el usuario vuelva a entrar con su nueva clave.
+    setTimeout(async () => {
+      try {
+        await db.auth.signOut();
+      } finally {
+        clearRecoveryUrl();
+        qs('recoveryForm').reset();
+        showLoginView('Contraseña actualizada. Ya puedes iniciar sesión con tu nueva contraseña.', 'success');
+      }
+    }, 900);
+  } catch (error) {
+    console.error(error);
+    setStatus(
+      status,
+      error?.message || 'No fue posible cambiar la contraseña. Solicita un nuevo enlace de recuperación.',
+      'error'
+    );
+  } finally {
+    button.disabled = false;
+  }
+});
+
 qs('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const status = qs('loginStatus');
@@ -1407,6 +1523,46 @@ qs('loginForm').addEventListener('submit', async (e) => {
     setStatus(status, error.message || 'No fue posible iniciar sesión.', 'error');
   } finally {
     qs('loginBtn').disabled = false;
+  }
+});
+
+qs('forgotPasswordBtn').addEventListener('click', async () => {
+  const email = qs('loginEmail').value.trim();
+  const status = qs('loginStatus');
+
+  if (!email) {
+    setStatus(status, 'Ingresa primero tu correo para enviarte el enlace de recuperación.', 'error');
+    qs('loginEmail').focus();
+    return;
+  }
+
+  const button = qs('forgotPasswordBtn');
+  button.disabled = true;
+  setStatus(status, 'Enviando enlace de recuperación...');
+
+  try {
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo
+    });
+
+    if (error) throw error;
+
+    setStatus(
+      status,
+      '✓ Revisa tu correo. El enlace te llevará a una pantalla para crear una nueva contraseña.',
+      'success'
+    );
+  } catch (error) {
+    console.error(error);
+    setStatus(
+      status,
+      error?.message || 'No fue posible enviar el enlace de recuperación.',
+      'error'
+    );
+  } finally {
+    button.disabled = false;
   }
 });
 
@@ -1592,8 +1748,19 @@ qs('profileForm').addEventListener('submit', (e) => saveProfile(e).catch(error =
 
 try {
   initializeSupabase();
-  db.auth.getSession().then(async ({ data }) => {
-    if (data?.session) {
+
+  // Supabase puede devolver el enlace de recuperación con los tokens
+  // en el fragmento de la URL. En ese caso NO entramos directamente
+  // al panel: mostramos primero el formulario para cambiar la clave.
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      showRecoveryView();
+      return;
+    }
+
+    // Si el usuario ya terminó la recuperación y existe una sesión,
+    // dejamos que el flujo normal cargue el panel.
+    if (event === 'SIGNED_IN' && session && !isRecoveryUrl()) {
       try {
         await bootstrap();
       } catch (error) {
@@ -1602,6 +1769,35 @@ try {
       }
     }
   });
+
+  // Revisamos primero si esta página fue abierta desde el enlace
+  // de recuperación de contraseña.
+  if (isRecoveryUrl()) {
+    showRecoveryView();
+
+    // getSession() permite que Supabase termine de procesar el enlace
+    // antes de intentar actualizar la contraseña.
+    db.auth.getSession().then(({ data, error }) => {
+      if (error || !data?.session) {
+        setStatus(
+          qs('recoveryStatus'),
+          'El enlace de recuperación no es válido o ya venció. Solicita un nuevo enlace.',
+          'error'
+        );
+      }
+    });
+  } else {
+    db.auth.getSession().then(async ({ data }) => {
+      if (data?.session) {
+        try {
+          await bootstrap();
+        } catch (error) {
+          await db.auth.signOut();
+          setStatus(qs('loginStatus'), error.message || 'No fue posible cargar tu perfil.', 'error');
+        }
+      }
+    });
+  }
 } catch (error) {
   setStatus(qs('loginStatus'), error.message, 'error');
   qs('loginBtn').disabled = true;
