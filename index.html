@@ -808,7 +808,7 @@ function openModal(p) {
 
   const message =
     encodeURIComponent(
-      `Hola ${p.agentes?.nombre || ''}, me interesa la propiedad "${p.titulo}" publicada en Alquileres Carpe Diem.`
+      `Hola ${p.agentes?.nombre || ''}, me interesa la propiedad "${p.titulo}" publicada en Alquileres Carpe Diem.\n\nPROPIEDAD_ID: ${p.id}`
     );
 
   const wa =
