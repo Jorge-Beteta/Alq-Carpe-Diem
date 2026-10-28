@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<head> 
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Propiedades disponibles — Alquileres Carpe Diem">
@@ -797,8 +797,7 @@ function openModal(p) {
     (p.propiedad_caracteristicas || [])
       .slice()
       .sort(
-        (a,b) =>
-          (a.caracteristicas?.orden || 0) -
+        (a,b) =>(a.caracteristicas?.orden || 0) -
           (b.caracteristicas?.orden || 0)
       );
 
@@ -1008,3 +1007,264 @@ function updateOptionalFilters() {
     .querySelectorAll('[data-filter-toggle]')
     .forEach(toggle => {
       const target =
+        document.querySelector(
+          `[data-filter-name="${toggle.dataset.filterToggle}"]`
+        );
+
+      if (target) {
+        target.hidden = !toggle.checked;
+      }
+    });
+
+  document
+    .querySelectorAll('[data-feature-toggle]')
+    .forEach(toggle => {
+      const target =
+        document.querySelector(
+          `[data-feature-filter-name="${toggle.dataset.featureToggle}"]`
+        );
+
+      if (target) {
+        target.hidden = !toggle.checked;
+      }
+    });
+
+  const anyFeatureActive =
+    !!document.querySelector('[data-feature-toggle]:checked');
+
+  $('dynamicFilterBox').hidden =
+    !anyFeatureActive;
+
+  updateActiveFilterChips();
+}
+
+function updateActiveFilterChips() {
+  const chips = [];
+
+  if ($('fText').value.trim()) {
+    chips.push(`Buscar: ${$('fText').value.trim()}`);
+  }
+
+  if ($('fType').value) {
+    chips.push(
+      $('fType').selectedOptions[0]?.textContent || 'Tipo'
+    );
+  }
+
+  if ($('fOperation').value) {
+    chips.push(
+      $('fOperation').selectedOptions[0]?.textContent || 'Operación'
+    );
+  }
+
+  if ($('fDepartment').value) {
+    chips.push(
+      $('fDepartment').selectedOptions[0]?.textContent || 'Departamento'
+    );
+  }
+
+  if ($('fMax').value) {
+    chips.push(`Hasta ${$('fMax').value}`);
+  }
+
+  const optional = {
+    agent: 'fAgent',
+    municipality: 'fMunicipality',
+    zone: 'fZone',
+    currency: 'fCurrency',
+    minprice: 'fMin',
+    sort: 'fSort'
+  };
+
+  Object.entries(optional).forEach(([name,id]) => {
+    if (!isFilterOn(name)) return;
+
+    const el = $(id);
+    if (!el || !el.value) return;
+
+    if (el.tagName === 'SELECT') {
+      chips.push(
+        el.selectedOptions[0]?.textContent || name
+      );
+    } else {
+      chips.push(
+        `${name === 'minprice' ? 'Desde' : name}: ${el.value}`
+      );
+    }
+  });
+
+  document
+    .querySelectorAll('[data-dynamic-filter]')
+    .forEach(el => {
+      const featureId = el.dataset.dynamicFilter;
+
+      if (!isFeatureFilterOn(featureId)) return;
+      if (!el.value) return;
+
+      const feature =
+        filterCharacteristics.find(c => c.id === featureId);
+
+      if (!feature) return;
+
+      let shownValue = el.value;
+
+      if (el.dataset.type === 'booleano') {
+        shownValue =
+          el.value === 'true' ? 'Sí' : 'No';
+      }
+
+      chips.push(
+        `${feature.nombre}: ${shownValue}${feature.unidad ? ' ' + feature.unidad : ''}`
+      );
+    });
+
+  const container = $('activeFilterChips');
+
+  container.innerHTML =
+    chips.map(
+      text =>
+        `<span class="active-filter-chip">
+          ${esc(text)}
+        </span>`
+    ).join('');
+
+  container.hidden = !chips.length;
+}
+
+function clearFilters() {
+  $('fText').value = '';
+  $('fType').value = '';
+  $('fOperation').value = '';
+  $('fDepartment').value = '';
+  $('fMax').value = '';
+
+  $('fAgent').value = '';
+  $('fCurrency').value = '';
+  $('fMin').value = '';
+  $('fSort').value = 'recent';
+
+  $('fMunicipality').innerHTML =
+    '<option value="">Cualquier municipio</option>';
+
+  $('fMunicipality').disabled =
+    true;
+
+  $('fZone').innerHTML =
+    '<option value="">Cualquier zona</option>';
+
+  $('fZone').disabled =
+    true;
+
+  document
+    .querySelectorAll('[data-dynamic-filter]')
+    .forEach(el => el.value = '');
+
+  document
+    .querySelectorAll('[data-filter-toggle]')
+    .forEach(el => el.checked = false);
+
+  document
+    .querySelectorAll('[data-feature-toggle]')
+    .forEach(el => el.checked = false);
+
+  updateOptionalFilters();
+  render();
+}
+
+function showError(error) {
+  console.error(error);
+
+  $('catalogStatus').hidden = false;
+
+  $('catalogStatus').innerHTML = `
+    <div class="status-card status-error">
+      <strong>No se pudieron cargar los datos.</strong>
+      <span>${esc(error.message || '')}</span>
+    </div>`;
+}
+
+['fText','fType','fOperation','fDepartment','fMax',
+ 'fAgent','fCurrency','fMin','fSort']
+.forEach(id => {
+  const el = $(id);
+
+  el.addEventListener('input', render);
+  el.addEventListener('change', render);
+});
+
+$('fDepartment').addEventListener(
+  'change',
+  () => {
+    loadMunicipalities(
+      $('fDepartment').value
+    ).catch(showError);
+  }
+);
+
+$('fMunicipality').addEventListener(
+  'change',
+  () => {
+    loadZones(
+      $('fMunicipality').value
+    ).catch(showError);
+  }
+);
+
+$('fZone').addEventListener(
+  'change',
+  render
+);
+
+$('moreFiltersBtn').addEventListener(
+  'click',
+  () => {
+    $('advancedFiltersPanel').hidden =
+      !$('advancedFiltersPanel').hidden;
+
+    $('moreFiltersBtn').textContent =
+      $('advancedFiltersPanel').hidden
+        ? '+ Más filtros'
+        : '− Menos filtros';
+  }
+);
+
+$('closeAdvancedFilters').addEventListener(
+  'click',
+  () => {
+    $('advancedFiltersPanel').hidden = true;
+    $('moreFiltersBtn').textContent = '+ Más filtros';
+  }
+);
+
+document
+  .querySelectorAll('[data-filter-toggle]')
+  .forEach(toggle => {
+    toggle.addEventListener(
+      'change',
+      () => {
+        updateOptionalFilters();
+        render();
+      }
+    );
+  });
+
+$('clearFilters').addEventListener(
+  'click',
+  clearFilters
+);
+
+$('emptyClear').addEventListener(
+  'click',
+  clearFilters
+);
+
+try {
+  initSupabase();
+  updateOptionalFilters();
+  bootstrap().catch(showError);
+} catch (error) {
+  showError(error);
+}
+</script>
+</body>
+</html>
