@@ -262,6 +262,12 @@
                 <textarea id="pDescription" rows="6" required placeholder="Describe la propiedad, sus principales atributos, distribución y cualquier información relevante para el interesado."></textarea>
               </div>
 
+              <div class="field">
+                <label for="pRequirements">Requisitos *</label>
+                <textarea id="pRequirements" rows="5" required placeholder="Ej. estabilidad laboral, ingresos comprobables, fiador, depósito, documentos requeridos u otras condiciones aplicables."></textarea>
+                <p class="field-help">Estos requisitos se mostrarán al cliente en el detalle de la propiedad y podrán utilizarse en el flujo de citas por WhatsApp.</p>
+              </div>
+
               <div class="section-title">Características requeridas</div>
               <div id="requiredFeatures" class="dynamic-features">
                 <p class="muted">Selecciona el tipo de inmueble.</p>
@@ -1113,6 +1119,10 @@ function validatePropertyForPublish() {
     missing.push('Descripción');
   }
 
+  if (!qs('pRequirements').value.trim()) {
+    missing.push('Requisitos');
+  }
+
   /*
    * Validamos expresamente las características configuradas
    * como obligatorias para el tipo de inmueble.
@@ -1199,6 +1209,7 @@ async function saveProperty(publish) {
     zona_id: qs('pZone').value,
     direccion_referencia: qs('pReference').value.trim() || null,
     descripcion: qs('pDescription').value.trim() || null,
+    requisitos: qs('pRequirements').value.trim() || null,
     disponible: qs('pAvailable').checked,
     publicada: false
   };
@@ -1208,8 +1219,8 @@ async function saveProperty(publish) {
    * un borrador para evitar enviar NULL a columnas que puedan
    * estar configuradas como NOT NULL en Supabase.
    *
-   * Descripción, características requeridas y fotografía son
-   * obligatorias para PUBLICAR, pero un borrador puede
+   * Descripción, requisitos, características requeridas y fotografía
+   * son obligatorias para PUBLICAR, pero un borrador puede
    * guardarse antes de completarlas.
    */
   if (
@@ -1383,6 +1394,7 @@ async function openPropertyEditor(property = null) {
   qs('pDepartment').value = property.departamento_id;
   qs('pReference').value = property.direccion_referencia || '';
   qs('pDescription').value = property.descripcion || '';
+  qs('pRequirements').value = property.requisitos || '';
   qs('pAvailable').checked = property.disponible;
   if (isAdmin) qs('pAgent').value = property.agente_id;
 
