@@ -258,8 +258,8 @@
               </div>
 
               <div class="field">
-                <label for="pDescription">Descripción</label>
-                <textarea id="pDescription" rows="6"></textarea>
+                <label for="pDescription">Descripción *</label>
+                <textarea id="pDescription" rows="6" required placeholder="Describe la propiedad, sus principales atributos, distribución y cualquier información relevante para el interesado."></textarea>
               </div>
 
               <div class="section-title">Características requeridas</div>
@@ -1083,18 +1083,116 @@ async function uploadPropertyPhotos(propertyId) {
   }
 }
 
+function validatePropertyForPublish() {
+  const missing = [];
+
+  const agentId = isAdmin ? qs('pAgent').value : currentAgent?.id;
+
+  if (!agentId) missing.push('Agente');
+  if (!qs('pTitle').value.trim()) missing.push('Título');
+  if (!qs('pType').value) missing.push('Tipo de inmueble');
+  if (!qs('pOperation').value) missing.push('Operación');
+  if (!qs('pCurrency').value) missing.push('Moneda');
+
+  const priceRaw = qs('pPrice').value;
+  const price = Number(priceRaw);
+
+  if (
+    priceRaw === '' ||
+    !Number.isFinite(price) ||
+    price < 0
+  ) {
+    missing.push('Precio');
+  }
+
+  if (!qs('pDepartment').value) missing.push('Departamento');
+  if (!qs('pMunicipality').value) missing.push('Municipio');
+  if (!qs('pZone').value) missing.push('Zona');
+
+  if (!qs('pDescription').value.trim()) {
+    missing.push('Descripción');
+  }
+
+  /*
+   * Validamos expresamente las características configuradas
+   * como obligatorias para el tipo de inmueble.
+   */
+  requiredFeatureIds.forEach(featureId => {
+    const input = document.querySelector(
+      `.feature-value[data-feature-id="${featureId}"]`
+    );
+
+    const feature = features.find(f => f.id === featureId);
+    const featureName = feature?.nombre || 'Característica requerida';
+
+    if (!input) {
+      missing.push(featureName);
+      return;
+    }
+
+    const value = String(input.value ?? '').trim();
+
+    if (value === '') {
+      missing.push(featureName);
+    }
+  });
+
+  /*
+   * Para publicar debe existir al menos una fotografía.
+   * Se toman en cuenta tanto las fotografías ya guardadas
+   * como las nuevas seleccionadas antes de publicar.
+   */
+  const totalPhotos =
+    existingPropertyPhotos.length +
+    selectedPhotoFiles.length;
+
+  if (totalPhotos < 1) {
+    missing.push('Al menos una fotografía');
+  }
+
+  if (missing.length) {
+    const uniqueMissing = [...new Set(missing)];
+
+    throw new Error(
+      `Para publicar completa los siguientes requisitos: ${uniqueMissing.join(', ')}.`
+    );
+  }
+
+  return true;
+}
+
+
 async function saveProperty(publish) {
   const status = qs('propertyStatus');
-  setStatus(status, publish ? 'Guardando y validando publicación...' : 'Guardando borrador...');
 
-  const agentId = isAdmin ? qs('pAgent').value : currentAgent.id;
+  setStatus(
+    status,
+    publish
+      ? 'Guardando y validando publicación...'
+      : 'Guardando borrador...'
+  );
+
+  /*
+   * Al publicar hacemos una validación explícita.
+   * Esto aplica igual para una propiedad nueva y para una
+   * propiedad que se está editando.
+   */
+  if (publish) {
+    validatePropertyForPublish();
+  }
+
+  const agentId = isAdmin
+    ? qs('pAgent').value
+    : currentAgent.id;
+
+  const priceRaw = qs('pPrice').value.trim();
 
   const payload = {
     agente_id: agentId,
     titulo: qs('pTitle').value.trim(),
     tipo_inmueble_id: qs('pType').value,
     tipo_operacion: qs('pOperation').value,
-    precio: Number(qs('pPrice').value),
+    precio: priceRaw === '' ? null : Number(priceRaw),
     moneda: qs('pCurrency').value,
     departamento_id: qs('pDepartment').value,
     municipio_id: qs('pMunicipality').value,
@@ -1105,23 +1203,71 @@ async function saveProperty(publish) {
     publicada: false
   };
 
-  if (!payload.agente_id || !payload.titulo || !payload.tipo_inmueble_id || !payload.departamento_id || !payload.municipio_id || !payload.zona_id) {
-    throw new Error('Completa todos los campos obligatorios.');
+  /*
+   * Conservamos los requisitos mínimos actuales para guardar
+   * un borrador para evitar enviar NULL a columnas que puedan
+   * estar configuradas como NOT NULL en Supabase.
+   *
+   * Descripción, características requeridas y fotografía son
+   * obligatorias para PUBLICAR, pero un borrador puede
+   * guardarse antes de completarlas.
+   */
+  if (
+    !payload.agente_id ||
+    !payload.titulo ||
+    !payload.tipo_inmueble_id ||
+    !payload.departamento_id ||
+    !payload.municipio_id ||
+    !payload.zona_id
+  ) {
+    throw new Error(
+      'Completa título, tipo de inmueble, departamento, municipio y zona antes de guardar.'
+    );
+  }
+
+  if (
+    payload.precio === null ||
+    !Number.isFinite(payload.precio) ||
+    payload.precio < 0
+  ) {
+    throw new Error('Ingresa un precio válido.');
   }
 
   let propertyId = qs('propertyId').value;
 
+  /*
+   * GUARDAR DATOS GENERALES
+   */
   if (propertyId) {
+    /*
+     * Si estamos editando una propiedad no modificamos aquí
+     * el estado publicada. La publicación se controla abajo.
+     */
     delete payload.publicada;
-    const { error } = await db.from('propiedades').update(payload).eq('id', propertyId);
+
+    const { error } = await db
+      .from('propiedades')
+      .update(payload)
+      .eq('id', propertyId);
+
     if (error) throw error;
+
   } else {
-    const { data, error } = await db.from('propiedades').insert(payload).select('id').single();
+    const { data, error } = await db
+      .from('propiedades')
+      .insert(payload)
+      .select('id')
+      .single();
+
     if (error) throw error;
+
     propertyId = data.id;
     qs('propertyId').value = propertyId;
   }
 
+  /*
+   * GUARDAR CARACTERÍSTICAS
+   */
   const values = collectFeatureValues();
 
   const { data: existingValues, error: existingError } = await db
@@ -1132,35 +1278,71 @@ async function saveProperty(publish) {
   if (existingError) throw existingError;
 
   const currentIds = new Set(values.keys());
-  const toDelete = (existingValues || []).filter(x => !currentIds.has(x.caracteristica_id)).map(x => x.id);
+
+  const toDelete = (existingValues || [])
+    .filter(x => !currentIds.has(x.caracteristica_id))
+    .map(x => x.id);
 
   if (toDelete.length) {
-    const { error } = await db.from('propiedad_caracteristicas').delete().in('id', toDelete);
+    const { error } = await db
+      .from('propiedad_caracteristicas')
+      .delete()
+      .in('id', toDelete);
+
     if (error) throw error;
   }
 
-  const upserts = [...values.entries()].map(([featureId, value]) => ({
-    propiedad_id: propertyId,
-    caracteristica_id: featureId,
-    valor: value
-  }));
+  const upserts = [...values.entries()].map(
+    ([featureId, value]) => ({
+      propiedad_id: propertyId,
+      caracteristica_id: featureId,
+      valor: value
+    })
+  );
 
   if (upserts.length) {
-    const { error } = await db.from('propiedad_caracteristicas').upsert(upserts, {
-      onConflict: 'propiedad_id,caracteristica_id'
-    });
+    const { error } = await db
+      .from('propiedad_caracteristicas')
+      .upsert(upserts, {
+        onConflict: 'propiedad_id,caracteristica_id'
+      });
+
     if (error) throw error;
   }
 
+  /*
+   * SUBIR FOTOGRAFÍAS NUEVAS
+   */
   await uploadPropertyPhotos(propertyId);
 
+  /*
+   * PUBLICAR
+   *
+   * Se conserva la RPC de Supabase como segunda capa de
+   * validación. La validación del navegador sirve para dar
+   * mensajes claros al agente antes de llegar al servidor.
+   */
   if (publish) {
-    const { error } = await db.rpc('publicar_propiedad', { p_propiedad_id: propertyId });
+    const { error } = await db.rpc(
+      'publicar_propiedad',
+      {
+        p_propiedad_id: propertyId
+      }
+    );
+
     if (error) throw error;
   }
 
-  setStatus(status, publish ? '✓ Propiedad publicada.' : '✓ Borrador guardado.', 'success');
+  setStatus(
+    status,
+    publish
+      ? '✓ Propiedad publicada.'
+      : '✓ Borrador guardado.',
+    'success'
+  );
+
   await loadProperties();
+
   setTimeout(closePropertyEditor, 700);
 }
 
