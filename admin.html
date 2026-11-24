@@ -552,7 +552,7 @@
           <button class="nav-item admin-only" data-view="features" style="display:none;">Características</button>
           <button class="nav-item admin-only" data-view="types" style="display:none;">Tipos de inmueble</button>
           <button class="nav-item admin-only" data-view="locations" style="display:none;">Ubicaciones</button>
-          <button class="nav-item" data-view="appointments">Citas</button>
+          <button class="nav-item" data-view="appointments">Citas <span id="appointmentNavCount" hidden></span></button>
           <button class="nav-item" data-view="availability">Mi disponibilidad</button>
           <button class="nav-item" data-view="profile">Mi perfil</button>
         </nav>
@@ -984,7 +984,7 @@
               <strong id="appointmentConfirmedCount">0</strong>
             </article>
             <article class="stat-card">
-              <span>Pendientes</span>
+              <span>Requieren atención</span>
               <strong id="appointmentPendingCount">0</strong>
             </article>
             <article class="stat-card">
@@ -992,17 +992,25 @@
               <strong id="appointmentTodayCount">0</strong>
             </article>
             <article class="stat-card">
-              <span>Historial visible</span>
+              <span>Resultados visibles</span>
               <strong id="appointmentTotalCount">0</strong>
             </article>
           </div>
 
+          <div class="admin-card">
+            <div class="admin-card-header"><div><span class="eyebrow">Bandeja de trabajo</span><h3>Requieren tu atención</h3></div><span id="appointmentQueueSummary" class="muted"></span></div>
+            <p class="muted">Solicitudes pendientes del agente, vencidas o antiguas que requieren revisión. No dependen del filtro de período de la agenda.</p>
+            <div id="appointmentQueue"></div>
+            <p id="appointmentActionStatus" class="status-msg" role="status" aria-live="polite"></p>
+          </div>
           <div class="admin-card filter-card">
             <div class="compact-filters">
               <select id="appointmentStatusFilter">
                 <option value="">Todos los estados</option>
                 <option value="confirmada">Confirmadas</option>
-                <option value="solicitada">Pendientes</option>
+                <option value="solicitada">Pendientes (todas)</option>
+                <option value="cliente">Esperando al cliente</option>
+                <option value="agente">Requieren atención</option>
                 <option value="cancelada">Canceladas / reprogramadas</option>
               </select>
 
@@ -1225,6 +1233,9 @@ let municipalities = [];
 let zones = [];
 let properties = [];
 let appointments = [];
+let appointmentActionBusy = false;
+let appointmentLoadSequence = 0;
+let appointmentRefreshTimer = null;
 let availabilityTargetAgentId = null;
 let availabilityData = null;
 
@@ -1332,6 +1343,11 @@ async function bootstrap() {
   qs('logoutBtn').style.display = 'inline-flex';
   qs('loginView').style.display = 'none';
   qs('appView').style.display = 'block';
+  loadAppointments().catch(error => setStatus(qs('appointmentStatus'), error.message, 'error'));
+  if (appointmentRefreshTimer) clearInterval(appointmentRefreshTimer);
+  appointmentRefreshTimer = setInterval(() => {
+    if (!document.hidden && !appointmentActionBusy) loadAppointments(true).catch(console.error);
+  }, 60000);
 
   if (isAdmin) {
     loadCentralCalendarStatus().catch(error => {
@@ -2097,14 +2113,22 @@ function appointmentState(row) {
   return row.estado || 'solicitada';
 }
 
+function appointmentNeedsAction(row) {
+  return appointmentState(row) === 'solicitada' && row.respuesta_pendiente_de !== 'cliente';
+}
+function appointmentExpired(row) { return new Date(row.inicio).getTime() <= Date.now(); }
 function appointmentStateLabel(row) {
   if (row.cancelado_en) {
-    if (row.motivo_reprogramacion) return 'Reprogramada';
-    return 'Cancelada';
+    if (row.ultima_gestion?.accion === 'rechazar') return 'Solicitud cerrada';
+    if (String(row.motivo_cancelacion || '').startsWith('Reprogramada')) return 'Reprogramada';
+    return 'Cancelada / cerrada';
   }
-
   if (row.estado === 'confirmada') return 'Confirmada';
-  if (row.estado === 'solicitada') return 'Pendiente';
+  if (row.estado === 'solicitada') {
+    if (row.respuesta_pendiente_de === 'cliente') return appointmentExpired(row) ? 'Propuesta vencida' : 'Esperando al cliente';
+    if (row.respuesta_pendiente_de !== 'agente') return 'Requiere revisión';
+    return appointmentExpired(row) ? 'Solicitud vencida' : 'Pendiente del agente';
+  }
   return row.estado || 'Pendiente';
 }
 
@@ -2153,7 +2177,9 @@ function filteredAppointments() {
   return appointments.filter(row => {
     const state = appointmentState(row);
 
-    if (status && state !== status) return false;
+    if (status === 'cliente' && !(state === 'solicitada' && row.respuesta_pendiente_de === 'cliente')) return false;
+    if (status === 'agente' && !appointmentNeedsAction(row)) return false;
+    if (status && !['cliente','agente'].includes(status) && state !== status) return false;
     if (agentId && row.agente_id !== agentId) return false;
 
     const start = new Date(row.inicio);
@@ -2184,6 +2210,10 @@ function appointmentRowHtml(row) {
   const property = row.propiedad_titulo || 'Propiedad';
   const agent = row.agente_nombre || 'Agente';
   const badge = appointmentStateLabel(row);
+  const actionButtons = appointmentNeedsAction(row) ? `
+    ${row.respuesta_pendiente_de === 'agente' && !appointmentExpired(row) ? `<button type="button" class="btn btn-primary btn-small" data-appointment-action="confirmar" data-cita-id="${esc(row.id)}">Confirmar</button>` : ''}
+    <button type="button" class="btn btn-secondary btn-small" data-appointment-action="rechazar" data-cita-id="${esc(row.id)}">${appointmentExpired(row) || row.respuesta_pendiente_de !== 'agente' ? 'Cerrar solicitud' : 'Rechazar'}</button>` : '';
+  const syncWarning = row.ultima_gestion?.detalle || (['error','advertencia','sin_conexion'].includes(row.google_sync_status) ? 'Google Calendar requiere revisión.' : '');
 
   return `
     <article class="property-row-v3">
@@ -2200,11 +2230,14 @@ function appointmentRowHtml(row) {
         <p><strong>${esc(formatAppointmentPanelDate(row.inicio))}</strong></p>
         <p>${esc(clientName)}${clientPhone ? ` · ${esc(clientPhone)}` : ''}</p>
         ${isAdmin ? `<span class="agent-caption">${esc(agent)}</span>` : ''}
-        ${row.motivo_cancelacion ? `<p class="muted">Motivo: ${esc(row.motivo_cancelacion)}</p>` : ''}
-        ${row.motivo_reprogramacion ? `<p class="muted">Reprogramación: ${esc(row.motivo_reprogramacion)}</p>` : ''}
+        ${row.solicitado_en && appointmentNeedsAction(row) ? `<p class="muted">Solicitada: ${esc(formatAppointmentPanelDate(row.solicitado_en))}</p>` : ''}
+        ${syncWarning ? `<p style="color:#9d2d2d">⚠ ${esc(syncWarning)}</p>` : ''}
+        ${row.motivo_cancelacion && !String(row.motivo_cancelacion).startsWith('__ESPERANDO_') ? `<p class="muted">Motivo: ${esc(row.motivo_cancelacion)}</p>` : ''}
+        ${row.motivo_reprogramacion && !String(row.motivo_reprogramacion).startsWith('__ESPERANDO_') ? `<p class="muted">Reprogramación: ${esc(row.motivo_reprogramacion)}</p>` : ''}
       </div>
 
       <div class="property-row-actions">
+        ${actionButtons}
         ${clientPhone
           ? `<a class="btn btn-secondary btn-small" href="https://wa.me/${esc(String(clientPhone).replace(/\D/g,''))}" target="_blank" rel="noopener">WhatsApp</a>`
           : ''}
@@ -2218,6 +2251,14 @@ function renderAppointments() {
     ? rows.map(appointmentRowHtml).join('')
     : '<p class="muted">No hay citas que coincidan con los filtros.</p>';
 
+  const pending = appointments.filter(appointmentNeedsAction);
+  const agentFilter = qs('appointmentAgentFilter').value;
+  const queue = pending.filter(r => !agentFilter || r.agente_id === agentFilter).sort((x,y) => Number(appointmentExpired(y))-Number(appointmentExpired(x)) || new Date(x.solicitado_en || x.inicio)-new Date(y.solicitado_en || y.inicio));
+  qs('appointmentQueue').innerHTML = queue.length ? queue.map(appointmentRowHtml).join('') : '<p class="muted">No hay solicitudes que requieran tu atención.</p>';
+  qs('appointmentQueueSummary').textContent = `${queue.length} por gestionar · ${queue.filter(appointmentExpired).length} vencidas`;
+  qs('appointmentNavCount').hidden = !pending.length;
+  qs('appointmentNavCount').textContent = `(${pending.length})`;
+  document.querySelectorAll('[data-appointment-action]').forEach(b => b.disabled = appointmentActionBusy);
   const now = new Date();
   const todayKey = dateKeyGuatemala(now);
 
@@ -2227,10 +2268,7 @@ function renderAppointments() {
       new Date(a.inicio) >= now
     ).length;
 
-  qs('appointmentPendingCount').textContent =
-    appointments.filter(a =>
-      appointmentState(a) === 'solicitada'
-    ).length;
+  qs('appointmentPendingCount').textContent = pending.length;
 
   qs('appointmentTodayCount').textContent =
     appointments.filter(a =>
@@ -2241,20 +2279,48 @@ function renderAppointments() {
   qs('appointmentTotalCount').textContent = rows.length;
 }
 
-async function loadAppointments() {
+async function loadAppointments(silent = false) {
+  const sequence = ++appointmentLoadSequence;
   const status = qs('appointmentStatus');
-  setStatus(status, 'Cargando citas...');
-
+  if (!silent) setStatus(status, 'Cargando citas...');
   const { data, error } = await db.rpc('listar_citas_panel');
-
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-
+  if (sequence !== appointmentLoadSequence) return;
+  if (error) { setStatus(status,error.message,'error'); throw error; }
   appointments = Array.isArray(data) ? data : [];
   renderAppointments();
   setStatus(status, '');
 }
 
+async function appointmentActionHandler(e) {
+  const btn=e.target.closest('[data-appointment-action]');
+  if (!btn || appointmentActionBusy) return;
+  const row=appointments.find(r=>r.id===btn.dataset.citaId);
+  if (!row || !appointmentNeedsAction(row)) return;
+  const action=btn.dataset.appointmentAction;
+  let comment='';
+  if (action==='confirmar') {
+    if (!confirm(`¿Confirmar la visita de ${row.cliente_nombre || 'este cliente'} para ${formatAppointmentPanelDate(row.inicio)}?`)) return;
+  } else {
+    comment=prompt('Escribe el motivo para el cliente. Se le ofrecerá buscar otro horario.', appointmentExpired(row)?'La fecha solicitada ya pasó. Por favor, selecciona un nuevo horario.':'');
+    if (comment===null) return;
+    comment=comment.trim();
+    if (!comment || comment.length>500) return setStatus(qs('appointmentActionStatus'),'Ingrese un comentario de 1 a 500 caracteres.','error');
+  }
+  appointmentActionBusy=true; renderAppointments();
+  setStatus(qs('appointmentActionStatus'),'Procesando y sincronizando...');
+  try {
+    const {data:{session},error}=await db.auth.getSession();
+    if(error || !session) throw new Error('Sesión vencida. Inicie sesión nuevamente.');
+    const response=await fetch(`${SUPABASE_URL.replace(/\/$/,'')}/functions/v1/gestionar-citas`,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,apikey:SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify({cita_id:row.id,accion:action,comentario:comment})});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok || !result.ok) throw new Error(result.error || `No se pudo gestionar la cita (HTTP ${response.status}).`);
+    setStatus(qs('appointmentActionStatus'),(action==='confirmar'?'Cita confirmada.':'Solicitud cerrada.') + (result.advertencias?.length?' '+result.advertencias.join(' '):''),result.advertencias?.length?'error':'success');
+  } catch(error) { setStatus(qs('appointmentActionStatus'),error.message+' Actualizando la bandeja...','error'); }
+  finally {
+    appointmentActionBusy=false;
+    try { await loadAppointments(true); } catch(error) { renderAppointments(); setStatus(qs('appointmentActionStatus'),'No se pudo actualizar la bandeja. Pulsa Actualizar antes de repetir una acción.','error'); }
+  }
+}
 
 const WEEKDAYS = [
   { id: 1, name: 'Lunes' },
@@ -2825,6 +2891,8 @@ qs('locMunicipalitySelect').addEventListener('change', async () => {
 });
 
 qs('refreshAppointmentsBtn').addEventListener('click', () => loadAppointments().catch(showError));
+qs('appointmentQueue').addEventListener('click', appointmentActionHandler);
+qs('appointmentList').addEventListener('click', appointmentActionHandler);
 
 qs('availabilityAgentSelect').addEventListener('change', () => {
   availabilityTargetAgentId = qs('availabilityAgentSelect').value || currentAgent.id;
