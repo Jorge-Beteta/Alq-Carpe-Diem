@@ -76,6 +76,7 @@
           <button class="nav-item admin-only" data-view="features" style="display:none;">Características</button>
           <button class="nav-item admin-only" data-view="types" style="display:none;">Tipos de inmueble</button>
           <button class="nav-item admin-only" data-view="locations" style="display:none;">Ubicaciones</button>
+          <button class="nav-item" data-view="appointments">Citas</button>
           <button class="nav-item" data-view="availability">Mi disponibilidad</button>
           <button class="nav-item" data-view="profile">Mi perfil</button>
         </nav>
@@ -491,6 +492,66 @@
           </div>
         </section>
 
+        <!-- APPOINTMENTS -->
+        <section class="admin-view" id="view-appointments">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Agenda</span>
+              <h2>Citas</h2>
+            </div>
+            <button id="refreshAppointmentsBtn" class="btn btn-secondary btn-small" type="button">Actualizar</button>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <span>Próximas confirmadas</span>
+              <strong id="appointmentConfirmedCount">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>Pendientes</span>
+              <strong id="appointmentPendingCount">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>Hoy</span>
+              <strong id="appointmentTodayCount">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>Historial visible</span>
+              <strong id="appointmentTotalCount">0</strong>
+            </article>
+          </div>
+
+          <div class="admin-card filter-card">
+            <div class="compact-filters">
+              <select id="appointmentStatusFilter">
+                <option value="">Todos los estados</option>
+                <option value="confirmada">Confirmadas</option>
+                <option value="solicitada">Pendientes</option>
+                <option value="cancelada">Canceladas / reprogramadas</option>
+              </select>
+
+              <select id="appointmentPeriodFilter">
+                <option value="upcoming">Próximas</option>
+                <option value="today">Hoy</option>
+                <option value="7days">Próximos 7 días</option>
+                <option value="history">Historial</option>
+                <option value="all">Todas</option>
+              </select>
+
+              <select id="appointmentAgentFilter" class="admin-only" style="display:none;">
+                <option value="">Todos los agentes</option>
+              </select>
+
+              <input id="appointmentSearch" type="search" placeholder="Buscar cliente o propiedad">
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div id="appointmentList"></div>
+            <span id="appointmentStatus" class="status-msg"></span>
+          </div>
+        </section>
+
         <!-- AVAILABILITY -->
         <section class="admin-view" id="view-availability">
           <div class="page-heading">
@@ -687,6 +748,7 @@ let departments = [];
 let municipalities = [];
 let zones = [];
 let properties = [];
+let appointments = [];
 let availabilityTargetAgentId = null;
 let availabilityData = null;
 
@@ -790,6 +852,7 @@ async function bootstrap() {
   await loadProperties();
   populateProfile();
   setupAvailabilityAgentSelector();
+  setupAppointmentsAgentFilter();
   qs('logoutBtn').style.display = 'inline-flex';
   qs('loginView').style.display = 'none';
   qs('appView').style.display = 'block';
@@ -991,6 +1054,7 @@ function showView(name) {
   if (name === 'agents' && isAdmin) loadAgents().catch(showError);
   if (name === 'features' && isAdmin) loadFeatures().catch(showError);
   if (name === 'locations' && isAdmin) loadLocationStats().catch(showError);
+  if (name === 'appointments') loadAppointments().catch(showError);
   if (name === 'availability') loadAvailability().catch(showError);
 }
 
@@ -1529,6 +1593,190 @@ async function syncIne() {
   } finally {
     qs('syncIneBtn').disabled = false;
   }
+}
+
+
+
+function setupAppointmentsAgentFilter() {
+  const select = qs('appointmentAgentFilter');
+  if (!select) return;
+
+  if (!isAdmin) {
+    select.style.display = 'none';
+    return;
+  }
+
+  select.style.display = '';
+  const activeAgents = agents.filter(a => a.activo);
+
+  select.innerHTML =
+    '<option value="">Todos los agentes</option>' +
+    activeAgents.map(a =>
+      `<option value="${a.id}">${esc([a.nombre, a.apellido].filter(Boolean).join(' '))}</option>`
+    ).join('');
+}
+
+function appointmentState(row) {
+  if (row.cancelado_en) return 'cancelada';
+  return row.estado || 'solicitada';
+}
+
+function appointmentStateLabel(row) {
+  if (row.cancelado_en) {
+    if (row.motivo_reprogramacion) return 'Reprogramada';
+    return 'Cancelada';
+  }
+
+  if (row.estado === 'confirmada') return 'Confirmada';
+  if (row.estado === 'solicitada') return 'Pendiente';
+  return row.estado || 'Pendiente';
+}
+
+function appointmentStateClass(row) {
+  const state = appointmentState(row);
+  if (state === 'confirmada') return 'available';
+  if (state === 'solicitada') return 'draft';
+  return 'unavailable';
+}
+
+function formatAppointmentPanelDate(iso) {
+  if (!iso) return '—';
+
+  return new Intl.DateTimeFormat('es-GT', {
+    timeZone: 'America/Guatemala',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).format(new Date(iso));
+}
+
+function dateKeyGuatemala(isoOrDate) {
+  const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Guatemala',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
+function filteredAppointments() {
+  const status = qs('appointmentStatusFilter').value;
+  const period = qs('appointmentPeriodFilter').value;
+  const agentId = qs('appointmentAgentFilter').value;
+  const text = qs('appointmentSearch').value.trim().toLowerCase();
+
+  const now = new Date();
+  const todayKey = dateKeyGuatemala(now);
+  const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  return appointments.filter(row => {
+    const state = appointmentState(row);
+
+    if (status && state !== status) return false;
+    if (agentId && row.agente_id !== agentId) return false;
+
+    const start = new Date(row.inicio);
+
+    if (period === 'upcoming' && start < now) return false;
+    if (period === 'today' && dateKeyGuatemala(start) !== todayKey) return false;
+    if (period === '7days' && (start < now || start > sevenDays)) return false;
+    if (period === 'history' && start >= now && !row.cancelado_en) return false;
+
+    if (text) {
+      const haystack = [
+        row.cliente_nombre,
+        row.cliente_telefono,
+        row.propiedad_titulo,
+        row.agente_nombre
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      if (!haystack.includes(text)) return false;
+    }
+
+    return true;
+  });
+}
+
+function appointmentRowHtml(row) {
+  const clientName = row.cliente_nombre || 'Cliente';
+  const clientPhone = row.cliente_telefono || '';
+  const property = row.propiedad_titulo || 'Propiedad';
+  const agent = row.agente_nombre || 'Agente';
+  const badge = appointmentStateLabel(row);
+
+  return `
+    <article class="property-row-v3">
+      <div class="property-row-placeholder" style="display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📅</div>
+
+      <div class="property-row-content">
+        <div class="property-row-titleline">
+          <h3>${esc(property)}</h3>
+          <div class="row-badges">
+            <span class="mini-badge ${appointmentStateClass(row)}">${esc(badge)}</span>
+          </div>
+        </div>
+
+        <p><strong>${esc(formatAppointmentPanelDate(row.inicio))}</strong></p>
+        <p>${esc(clientName)}${clientPhone ? ` · ${esc(clientPhone)}` : ''}</p>
+        ${isAdmin ? `<span class="agent-caption">${esc(agent)}</span>` : ''}
+        ${row.motivo_cancelacion ? `<p class="muted">Motivo: ${esc(row.motivo_cancelacion)}</p>` : ''}
+        ${row.motivo_reprogramacion ? `<p class="muted">Reprogramación: ${esc(row.motivo_reprogramacion)}</p>` : ''}
+      </div>
+
+      <div class="property-row-actions">
+        ${clientPhone
+          ? `<a class="btn btn-secondary btn-small" href="https://wa.me/${esc(String(clientPhone).replace(/\D/g,''))}" target="_blank" rel="noopener">WhatsApp</a>`
+          : ''}
+      </div>
+    </article>`;
+}
+
+function renderAppointments() {
+  const rows = filteredAppointments();
+  qs('appointmentList').innerHTML = rows.length
+    ? rows.map(appointmentRowHtml).join('')
+    : '<p class="muted">No hay citas que coincidan con los filtros.</p>';
+
+  const now = new Date();
+  const todayKey = dateKeyGuatemala(now);
+
+  qs('appointmentConfirmedCount').textContent =
+    appointments.filter(a =>
+      appointmentState(a) === 'confirmada' &&
+      new Date(a.inicio) >= now
+    ).length;
+
+  qs('appointmentPendingCount').textContent =
+    appointments.filter(a =>
+      appointmentState(a) === 'solicitada'
+    ).length;
+
+  qs('appointmentTodayCount').textContent =
+    appointments.filter(a =>
+      dateKeyGuatemala(a.inicio) === todayKey &&
+      !a.cancelado_en
+    ).length;
+
+  qs('appointmentTotalCount').textContent = rows.length;
+}
+
+async function loadAppointments() {
+  const status = qs('appointmentStatus');
+  setStatus(status, 'Cargando citas...');
+
+  const { data, error } = await db.rpc('listar_citas_panel');
+
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+
+  appointments = Array.isArray(data) ? data : [];
+  renderAppointments();
+  setStatus(status, '');
 }
 
 
@@ -2094,6 +2342,13 @@ qs('locMunicipalitySelect').addEventListener('change', async () => {
     <h4>Zonas registradas</h4>
     <div class="chips">${result.map(z => `<span>${esc(z.nombre)}</span>`).join('')}</div>`;
 });
+
+['appointmentStatusFilter','appointmentPeriodFilter','appointmentAgentFilter','appointmentSearch'].forEach(id => {
+  qs(id).addEventListener('input', renderAppointments);
+  qs(id).addEventListener('change', renderAppointments);
+});
+
+qs('refreshAppointmentsBtn').addEventListener('click', () => loadAppointments().catch(showError));
 
 qs('availabilityAgentSelect').addEventListener('change', () => {
   availabilityTargetAgentId = qs('availabilityAgentSelect').value || currentAgent.id;
