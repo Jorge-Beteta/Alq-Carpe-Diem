@@ -999,8 +999,10 @@
 
           <div class="admin-card">
             <div class="admin-card-header"><div><span class="eyebrow">Bandeja de trabajo</span><h3>Requieren tu atención</h3></div><span id="appointmentQueueSummary" class="muted"></span></div>
-            <p class="muted">Solicitudes pendientes del agente, vencidas o antiguas que requieren revisión. No dependen del filtro de período de la agenda.</p>
-            <div id="appointmentQueue"></div>
+            <p class="muted">Solicitudes pendientes, vencidas y visitas confirmadas que necesitan un resultado. No dependen del filtro de período de la agenda.</p>
+            <h4>Pendientes de confirmación</h4><div id="appointmentQueue"></div>
+            <h4>Solicitudes vencidas / revisión</h4><div id="appointmentExpiredQueue"></div>
+            <h4>Resultados pendientes de visitas confirmadas</h4><div id="appointmentResultQueue"></div>
             <p id="appointmentActionStatus" class="status-msg" role="status" aria-live="polite"></p>
           </div>
           <div class="admin-card filter-card">
@@ -1217,6 +1219,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 
+<dialog id="visitResultDialog" style="width:min(480px,90vw);border:1px solid #ddd;border-radius:16px;padding:24px;box-sizing:border-box;">
+  <h3>Registrar resultado de visita</h3><p id="visitResultTitle"></p>
+  <form id="visitResultForm">
+    <input type="hidden" id="visitResultId">
+    <div class="field"><label for="visitResultType">Resultado</label><select id="visitResultType"><option value="realizada">Visita realizada</option><option value="cliente_no_llego">Cliente no se presentó</option><option value="no_realizada">Visita no realizada (otro motivo)</option></select></div>
+    <div class="field"><label for="visitResultInterest">Interés del cliente</label><select id="visitResultInterest"><option value="por_definir">Por definir</option><option value="interesado">Interesado</option><option value="no_interesado">No interesado</option></select></div>
+    <div class="field"><label for="visitResultNotes">Observaciones</label><textarea id="visitResultNotes" maxlength="1000" rows="4"></textarea></div>
+    <div class="form-actions"><button id="visitResultSave" class="btn btn-primary" type="submit">Guardar resultado</button><button id="visitResultClose" class="btn btn-secondary" type="button">Cerrar</button></div><p id="visitResultStatus" class="status-msg"></p>
+  </form>
+</dialog>
 <script>
 const qs = (id) => document.getElementById(id);
 
@@ -2116,14 +2128,20 @@ function appointmentState(row) {
 function appointmentNeedsAction(row) {
   return appointmentState(row) === 'solicitada' && row.respuesta_pendiente_de !== 'cliente';
 }
+function appointmentNeedsResult(row) { return appointmentState(row)==='confirmada' && row.fin && new Date(row.fin).getTime()<=Date.now() && !row.resultado_visita; }
+function resultLabel(row) { return ({realizada:'Visita realizada',cliente_no_llego:'Cliente no se presentó',no_realizada:'Visita no realizada'})[row.resultado_visita] || ''; }
+function interestLabel(row) { return ({interesado:'Interesado',no_interesado:'No interesado',por_definir:'Por definir'})[row.interes_visita] || ''; }
 function appointmentExpired(row) { return new Date(row.inicio).getTime() <= Date.now(); }
 function appointmentStateLabel(row) {
   if (row.cancelado_en) {
-    if (row.ultima_gestion?.accion === 'rechazar') return 'Solicitud cerrada';
+    if (row.tipo_cierre_solicitud==='vencida_agente') return 'Vencida sin respuesta del agente';
+    if (row.tipo_cierre_solicitud==='rechazada') return 'Rechazada';
+    if (row.tipo_cierre_solicitud==='revision') return 'Cerrada tras revisión';
+    if (row.ultima_gestion?.accion === 'rechazar') return 'Solicitud cerrada (histórica)';
     if (String(row.motivo_cancelacion || '').startsWith('Reprogramada')) return 'Reprogramada';
     return 'Cancelada / cerrada';
   }
-  if (row.estado === 'confirmada') return 'Confirmada';
+  if (row.estado === 'confirmada') return row.resultado_visita ? resultLabel(row) : appointmentNeedsResult(row) ? 'Resultado pendiente' : 'Confirmada';
   if (row.estado === 'solicitada') {
     if (row.respuesta_pendiente_de === 'cliente') return appointmentExpired(row) ? 'Propuesta vencida' : 'Esperando al cliente';
     if (row.respuesta_pendiente_de !== 'agente') return 'Requiere revisión';
@@ -2210,10 +2228,10 @@ function appointmentRowHtml(row) {
   const property = row.propiedad_titulo || 'Propiedad';
   const agent = row.agente_nombre || 'Agente';
   const badge = appointmentStateLabel(row);
-  const actionButtons = appointmentNeedsAction(row) ? `
+  const actionButtons = appointmentNeedsResult(row) ? `<button type="button" class="btn btn-primary btn-small" data-appointment-action="resultado" data-cita-id="${esc(row.id)}">Registrar resultado</button>` : appointmentNeedsAction(row) ? `
     ${row.respuesta_pendiente_de === 'agente' && !appointmentExpired(row) ? `<button type="button" class="btn btn-primary btn-small" data-appointment-action="confirmar" data-cita-id="${esc(row.id)}">Confirmar</button>` : ''}
-    <button type="button" class="btn btn-secondary btn-small" data-appointment-action="rechazar" data-cita-id="${esc(row.id)}">${appointmentExpired(row) || row.respuesta_pendiente_de !== 'agente' ? 'Cerrar solicitud' : 'Rechazar'}</button>` : '';
-  const syncWarning = row.ultima_gestion?.detalle || (['error','advertencia','sin_conexion'].includes(row.google_sync_status) ? 'Google Calendar requiere revisión.' : '');
+    <button type="button" class="btn btn-secondary btn-small" data-appointment-action="${appointmentExpired(row) && row.respuesta_pendiente_de==='agente' ? 'vencer' : 'rechazar'}" data-cita-id="${esc(row.id)}">${appointmentExpired(row) && row.respuesta_pendiente_de==='agente' ? 'Disculpa y nueva fecha' : row.respuesta_pendiente_de!=='agente' ? 'Cerrar tras revisión' : 'Rechazar'}</button>` : '';
+  const syncWarning = (row.ultima_gestion?.accion !== 'registrar_resultado' ? row.ultima_gestion?.detalle : '') || (['error','advertencia','sin_conexion'].includes(row.google_sync_status) ? 'Google Calendar requiere revisión.' : '');
 
   return `
     <article class="property-row-v3">
@@ -2231,6 +2249,9 @@ function appointmentRowHtml(row) {
         <p>${esc(clientName)}${clientPhone ? ` · ${esc(clientPhone)}` : ''}</p>
         ${isAdmin ? `<span class="agent-caption">${esc(agent)}</span>` : ''}
         ${row.solicitado_en && appointmentNeedsAction(row) ? `<p class="muted">Solicitada: ${esc(formatAppointmentPanelDate(row.solicitado_en))}</p>` : ''}
+        ${row.confirmado_en ? `<p class="muted">Confirmada: ${esc(formatAppointmentPanelDate(row.confirmado_en))}</p>` : ''}
+        ${row.resultado_visita ? `<p><strong>${esc(resultLabel(row))}</strong> ${esc(interestLabel(row))}</p>` : ''}
+        ${row.observaciones_visita ? `<p class="muted">Observaciones: ${esc(row.observaciones_visita)}</p>` : ''}
         ${syncWarning ? `<p style="color:#9d2d2d">⚠ ${esc(syncWarning)}</p>` : ''}
         ${row.motivo_cancelacion && !String(row.motivo_cancelacion).startsWith('__ESPERANDO_') ? `<p class="muted">Motivo: ${esc(row.motivo_cancelacion)}</p>` : ''}
         ${row.motivo_reprogramacion && !String(row.motivo_reprogramacion).startsWith('__ESPERANDO_') ? `<p class="muted">Reprogramación: ${esc(row.motivo_reprogramacion)}</p>` : ''}
@@ -2254,10 +2275,15 @@ function renderAppointments() {
   const pending = appointments.filter(appointmentNeedsAction);
   const agentFilter = qs('appointmentAgentFilter').value;
   const queue = pending.filter(r => !agentFilter || r.agente_id === agentFilter).sort((x,y) => Number(appointmentExpired(y))-Number(appointmentExpired(x)) || new Date(x.solicitado_en || x.inicio)-new Date(y.solicitado_en || y.inicio));
-  qs('appointmentQueue').innerHTML = queue.length ? queue.map(appointmentRowHtml).join('') : '<p class="muted">No hay solicitudes que requieran tu atención.</p>';
-  qs('appointmentQueueSummary').textContent = `${queue.length} por gestionar · ${queue.filter(appointmentExpired).length} vencidas`;
-  qs('appointmentNavCount').hidden = !pending.length;
-  qs('appointmentNavCount').textContent = `(${pending.length})`;
+  const activeQueue=queue.filter(r=>!appointmentExpired(r) && r.respuesta_pendiente_de==='agente');
+  const expiredQueue=queue.filter(r=>appointmentExpired(r) || r.respuesta_pendiente_de!=='agente');
+  const resultQueue=appointments.filter(appointmentNeedsResult).filter(r=>!agentFilter || r.agente_id===agentFilter);
+  const renderQueue=(id,list)=>qs(id).innerHTML=list.length?list.map(appointmentRowHtml).join(''):'<p class="muted">Sin pendientes.</p>';
+  renderQueue('appointmentQueue',activeQueue); renderQueue('appointmentExpiredQueue',expiredQueue); renderQueue('appointmentResultQueue',resultQueue);
+  const count=pending.length+appointments.filter(appointmentNeedsResult).length;
+  qs('appointmentQueueSummary').textContent=`${activeQueue.length} por confirmar · ${expiredQueue.length} vencidas/revisión · ${resultQueue.length} resultados`;
+  qs('appointmentNavCount').hidden=!count;
+  qs('appointmentNavCount').textContent=`(${count})`;
   document.querySelectorAll('[data-appointment-action]').forEach(b => b.disabled = appointmentActionBusy);
   const now = new Date();
   const todayKey = dateKeyGuatemala(now);
@@ -2268,12 +2294,12 @@ function renderAppointments() {
       new Date(a.inicio) >= now
     ).length;
 
-  qs('appointmentPendingCount').textContent = pending.length;
+  qs('appointmentPendingCount').textContent = count;
 
   qs('appointmentTodayCount').textContent =
     appointments.filter(a =>
       dateKeyGuatemala(a.inicio) === todayKey &&
-      !a.cancelado_en
+      appointmentState(a)==='confirmada'
     ).length;
 
   qs('appointmentTotalCount').textContent = rows.length;
@@ -2295,13 +2321,15 @@ async function appointmentActionHandler(e) {
   const btn=e.target.closest('[data-appointment-action]');
   if (!btn || appointmentActionBusy) return;
   const row=appointments.find(r=>r.id===btn.dataset.citaId);
-  if (!row || !appointmentNeedsAction(row)) return;
+  if (!row) return;
   const action=btn.dataset.appointmentAction;
+  if(action==='resultado') { if(appointmentNeedsResult(row)) openVisitResult(row); return; }
+  if(!appointmentNeedsAction(row)) return;
   let comment='';
   if (action==='confirmar') {
     if (!confirm(`¿Confirmar la visita de ${row.cliente_nombre || 'este cliente'} para ${formatAppointmentPanelDate(row.inicio)}?`)) return;
   } else {
-    comment=prompt('Escribe el motivo para el cliente. Se le ofrecerá buscar otro horario.', appointmentExpired(row)?'La fecha solicitada ya pasó. Por favor, selecciona un nuevo horario.':'');
+    comment=prompt('Escribe el motivo para el cliente. Se le ofrecerá buscar otro horario.', action==='vencer'?'Gracias por tu interés. Por favor, selecciona un nuevo horario disponible.':appointmentExpired(row)?'La fecha solicitada ya pasó. Por favor, selecciona un nuevo horario.':'');
     if (comment===null) return;
     comment=comment.trim();
     if (!comment || comment.length>500) return setStatus(qs('appointmentActionStatus'),'Ingrese un comentario de 1 a 500 caracteres.','error');
@@ -2321,6 +2349,35 @@ async function appointmentActionHandler(e) {
     try { await loadAppointments(true); } catch(error) { renderAppointments(); setStatus(qs('appointmentActionStatus'),'No se pudo actualizar la bandeja. Pulsa Actualizar antes de repetir una acción.','error'); }
   }
 }
+
+function openVisitResult(row) {
+  const d=qs('visitResultDialog');
+  qs('visitResultForm').reset();
+  qs('visitResultId').value=row.id;
+  qs('visitResultTitle').textContent=row.propiedad_titulo+' · '+(row.cliente_nombre||'Cliente');
+  qs('visitResultInterest').disabled=false;
+  qs('visitResultNotes').required=false;
+  qs('visitResultStatus').textContent='';
+  d.showModal();
+}
+qs('visitResultType').addEventListener('change',()=>{
+  qs('visitResultInterest').disabled=qs('visitResultType').value!=='realizada';
+  qs('visitResultNotes').required=qs('visitResultType').value==='no_realizada';
+});
+qs('visitResultClose').addEventListener('click',()=>qs('visitResultDialog').close());
+qs('visitResultForm').addEventListener('submit',async e=>{
+  e.preventDefault(); if(appointmentActionBusy)return;
+  const tipo=qs('visitResultType').value;
+  appointmentActionBusy=true; qs('visitResultSave').disabled=true;
+  try {
+    const {error}=await db.rpc('registrar_resultado_visita',{p_cita_id:qs('visitResultId').value,p_resultado:tipo,p_interes:tipo==='realizada'?qs('visitResultInterest').value:null,p_observaciones:qs('visitResultNotes').value});
+    if(error)throw error;
+    qs('visitResultDialog').close();
+    setStatus(qs('appointmentActionStatus'),'Resultado registrado.','success');
+    await loadAppointments(true);
+  }catch(error){setStatus(qs('visitResultStatus'),error.message,'error');}
+  finally{appointmentActionBusy=false;qs('visitResultSave').disabled=false;renderAppointments();}
+});
 
 const WEEKDAYS = [
   { id: 1, name: 'Lunes' },
@@ -2891,7 +2948,7 @@ qs('locMunicipalitySelect').addEventListener('change', async () => {
 });
 
 qs('refreshAppointmentsBtn').addEventListener('click', () => loadAppointments().catch(showError));
-qs('appointmentQueue').addEventListener('click', appointmentActionHandler);
+['appointmentQueue','appointmentExpiredQueue','appointmentResultQueue'].forEach(id=>qs(id).addEventListener('click',appointmentActionHandler));
 qs('appointmentList').addEventListener('click', appointmentActionHandler);
 
 qs('availabilityAgentSelect').addEventListener('change', () => {
