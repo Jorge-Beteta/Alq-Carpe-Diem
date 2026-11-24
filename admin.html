@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -52,36 +52,7 @@
         </div>
 
         <button id="loginBtn" class="btn btn-primary btn-full" type="submit">Entrar</button>
-        <button id="forgotPasswordBtn" class="link-button" type="button">¿Olvidaste tu contraseña?</button>
         <p id="loginStatus" class="status-msg"></p>
-      </form>
-    </div>
-  </section>
-
-  <!-- PASSWORD RECOVERY -->
-  <section id="recoveryView" class="login-shell" style="display:none;">
-    <div class="admin-card login-card">
-      <span class="eyebrow">Seguridad</span>
-      <h2>Crear nueva contraseña</h2>
-      <p class="muted">Escribe una nueva contraseña para tu cuenta.</p>
-
-      <form id="recoveryForm">
-        <div class="field">
-          <label for="recoveryPassword">Nueva contraseña</label>
-          <input id="recoveryPassword" type="password" autocomplete="new-password"
-                 minlength="6" required>
-        </div>
-
-        <div class="field">
-          <label for="recoveryPasswordConfirm">Confirmar contraseña</label>
-          <input id="recoveryPasswordConfirm" type="password" autocomplete="new-password"
-                 minlength="6" required>
-        </div>
-
-        <button id="recoveryBtn" class="btn btn-primary btn-full" type="submit">
-          Cambiar contraseña
-        </button>
-        <p id="recoveryStatus" class="status-msg"></p>
       </form>
     </div>
   </section>
@@ -259,13 +230,12 @@
 
               <div class="field">
                 <label for="pDescription">Descripción *</label>
-                <textarea id="pDescription" rows="6" required placeholder="Describe la propiedad, sus principales atributos, distribución y cualquier información relevante para el interesado."></textarea>
+                <textarea id="pDescription" rows="6"></textarea>
               </div>
 
               <div class="field">
                 <label for="pRequirements">Requisitos *</label>
-                <textarea id="pRequirements" rows="5" required placeholder="Ej. estabilidad laboral, ingresos comprobables, fiador, depósito, documentos requeridos u otras condiciones aplicables."></textarea>
-                <p class="field-help">Estos requisitos se mostrarán al cliente en el detalle de la propiedad y podrán utilizarse en el flujo de citas por WhatsApp.</p>
+                <textarea id="pRequirements" rows="6" placeholder="Ej. DPI, constancia laboral, depósito, fiador, etc."></textarea>
               </div>
 
               <div class="section-title">Características requeridas</div>
@@ -492,16 +462,17 @@
           <div class="admin-card">
             <div class="admin-card-header">
               <div>
-                <span class="eyebrow">Catálogo territorial</span>
-                <h3>Ubicaciones cargadas</h3>
+                <span class="eyebrow">Sincronización</span>
+                <h3>Catálogo territorial del INE</h3>
               </div>
             </div>
 
             <p class="muted">
-              El catálogo territorial se administra localmente en Supabase. Incluye los 22 departamentos,
-              340 municipios, “Sin zona / No aplica” para cada municipio y las zonas oficiales identificadas
-              directamente en la fuente del INE.
+              Ejecuta la función administrativa que carga o actualiza departamentos, municipios y zonas desde la fuente configurada.
             </p>
+
+            <button id="syncIneBtn" class="btn btn-primary" type="button">Sincronizar con INE</button>
+            <span id="syncIneStatus" class="status-msg"></span>
           </div>
 
           <div class="admin-card">
@@ -570,6 +541,33 @@
               <button class="btn btn-primary" type="submit">Guardar perfil</button>
               <span id="profileStatus" class="status-msg"></span>
             </form>
+          </div>
+
+          <div id="googleCalendarAdminCard" class="admin-card admin-only" style="display:none;">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Integración</span>
+                <h3>Google Calendar de Carpe Diem</h3>
+              </div>
+            </div>
+
+            <p id="calendarConnectionText" class="muted">
+              Consultando estado de Google Calendar…
+            </p>
+
+            <p class="muted">
+              Se utiliza una sola cuenta central de Carpe Diem. El sistema asignará un calendario separado a cada agente para que cada uno consulte únicamente sus propias visitas.
+            </p>
+
+            <div class="form-actions">
+              <button id="connectCalendarBtn" class="btn btn-primary" type="button">
+                Conectar Google Calendar
+              </button>
+              <button id="disconnectCalendarBtn" class="btn btn-secondary" type="button" style="display:none;">
+                Desconectar
+              </button>
+              <span id="calendarStatus" class="status-msg"></span>
+            </div>
           </div>
         </section>
       </div>
@@ -648,44 +646,6 @@ function initializeSupabase() {
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-function isRecoveryUrl() {
-  const hash = window.location.hash || '';
-  const search = window.location.search || '';
-  const combined = `${hash}&${search}`.toLowerCase();
-  return combined.includes('type=recovery') ||
-         combined.includes('type%3drecovery');
-}
-
-function showRecoveryView() {
-  qs('loginView').style.display = 'none';
-  qs('recoveryView').style.display = 'block';
-  qs('appView').style.display = 'none';
-  qs('logoutBtn').style.display = 'none';
-  qs('recoveryPassword').focus();
-}
-
-function showLoginView(message = '', type = '') {
-  qs('recoveryView').style.display = 'none';
-  qs('appView').style.display = 'none';
-  qs('loginView').style.display = 'block';
-  if (message) setStatus(qs('loginStatus'), message, type);
-}
-
-function clearRecoveryUrl() {
-  try {
-    const cleanUrl = `${window.location.origin}${window.location.pathname}`;
-    window.history.replaceState({}, document.title, cleanUrl);
-  } catch (e) {
-    console.warn('No fue posible limpiar la URL de recuperación.', e);
-  }
-}
-
-async function updatePassword(password) {
-  const { data, error } = await db.auth.updateUser({ password });
-  if (error) throw error;
-  return data;
-}
-
 async function login(email, password) {
   const { data, error } = await db.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -736,6 +696,13 @@ async function bootstrap() {
   qs('logoutBtn').style.display = 'inline-flex';
   qs('loginView').style.display = 'none';
   qs('appView').style.display = 'block';
+
+  if (isAdmin) {
+    loadCentralCalendarStatus().catch(error => {
+      console.error('GOOGLE CALENDAR STATUS:', error);
+      setStatus(qs('calendarStatus'), error.message || 'No fue posible consultar Google Calendar.', 'error');
+    });
+  }
 }
 
 async function loadTypes() {
@@ -1089,120 +1056,18 @@ async function uploadPropertyPhotos(propertyId) {
   }
 }
 
-function validatePropertyForPublish() {
-  const missing = [];
-
-  const agentId = isAdmin ? qs('pAgent').value : currentAgent?.id;
-
-  if (!agentId) missing.push('Agente');
-  if (!qs('pTitle').value.trim()) missing.push('Título');
-  if (!qs('pType').value) missing.push('Tipo de inmueble');
-  if (!qs('pOperation').value) missing.push('Operación');
-  if (!qs('pCurrency').value) missing.push('Moneda');
-
-  const priceRaw = qs('pPrice').value;
-  const price = Number(priceRaw);
-
-  if (
-    priceRaw === '' ||
-    !Number.isFinite(price) ||
-    price < 0
-  ) {
-    missing.push('Precio');
-  }
-
-  if (!qs('pDepartment').value) missing.push('Departamento');
-  if (!qs('pMunicipality').value) missing.push('Municipio');
-  if (!qs('pZone').value) missing.push('Zona');
-
-  if (!qs('pDescription').value.trim()) {
-    missing.push('Descripción');
-  }
-
-  if (!qs('pRequirements').value.trim()) {
-    missing.push('Requisitos');
-  }
-
-  /*
-   * Validamos expresamente las características configuradas
-   * como obligatorias para el tipo de inmueble.
-   */
-  requiredFeatureIds.forEach(featureId => {
-    const input = document.querySelector(
-      `.feature-value[data-feature-id="${featureId}"]`
-    );
-
-    const feature = features.find(f => f.id === featureId);
-    const featureName = feature?.nombre || 'Característica requerida';
-
-    if (!input) {
-      missing.push(featureName);
-      return;
-    }
-
-    const value = String(input.value ?? '').trim();
-
-    if (value === '') {
-      missing.push(featureName);
-    }
-  });
-
-  /*
-   * Para publicar debe existir al menos una fotografía.
-   * Se toman en cuenta tanto las fotografías ya guardadas
-   * como las nuevas seleccionadas antes de publicar.
-   */
-  const totalPhotos =
-    existingPropertyPhotos.length +
-    selectedPhotoFiles.length;
-
-  if (totalPhotos < 1) {
-    missing.push('Al menos una fotografía');
-  }
-
-  if (missing.length) {
-    const uniqueMissing = [...new Set(missing)];
-
-    throw new Error(
-      `Para publicar completa los siguientes requisitos: ${uniqueMissing.join(', ')}.`
-    );
-  }
-
-  return true;
-}
-
-
 async function saveProperty(publish) {
   const status = qs('propertyStatus');
+  setStatus(status, publish ? 'Guardando y validando publicación...' : 'Guardando borrador...');
 
-  setStatus(
-    status,
-    publish
-      ? 'Guardando y validando publicación...'
-      : 'Guardando borrador...'
-  );
-
-  /*
-   * Al publicar hacemos una validación explícita.
-   * Esto aplica igual para una propiedad nueva y para una
-   * propiedad que se está editando.
-   */
-  if (publish) {
-    validatePropertyForPublish();
-  }
-
-  const agentId = isAdmin
-    ? qs('pAgent').value
-    : currentAgent.id;
-
-  const priceRaw = qs('pPrice').value.trim();
+  const agentId = isAdmin ? qs('pAgent').value : currentAgent.id;
 
   const payload = {
     agente_id: agentId,
     titulo: qs('pTitle').value.trim(),
     tipo_inmueble_id: qs('pType').value,
     tipo_operacion: qs('pOperation').value,
-    precio: priceRaw === '' ? null : Number(priceRaw),
+    precio: Number(qs('pPrice').value),
     moneda: qs('pCurrency').value,
     departamento_id: qs('pDepartment').value,
     municipio_id: qs('pMunicipality').value,
@@ -1214,71 +1079,31 @@ async function saveProperty(publish) {
     publicada: false
   };
 
-  /*
-   * Conservamos los requisitos mínimos actuales para guardar
-   * un borrador para evitar enviar NULL a columnas que puedan
-   * estar configuradas como NOT NULL en Supabase.
-   *
-   * Descripción, requisitos, características requeridas y fotografía
-   * son obligatorias para PUBLICAR, pero un borrador puede
-   * guardarse antes de completarlas.
-   */
-  if (
-    !payload.agente_id ||
-    !payload.titulo ||
-    !payload.tipo_inmueble_id ||
-    !payload.departamento_id ||
-    !payload.municipio_id ||
-    !payload.zona_id
-  ) {
-    throw new Error(
-      'Completa título, tipo de inmueble, departamento, municipio y zona antes de guardar.'
-    );
+  if (!payload.agente_id || !payload.titulo || !payload.tipo_inmueble_id || !payload.departamento_id || !payload.municipio_id || !payload.zona_id) {
+    throw new Error('Completa todos los campos obligatorios.');
   }
 
-  if (
-    payload.precio === null ||
-    !Number.isFinite(payload.precio) ||
-    payload.precio < 0
-  ) {
-    throw new Error('Ingresa un precio válido.');
+  if (publish) {
+    if (!payload.descripcion) throw new Error('La descripción es obligatoria para publicar.');
+    if (!payload.requisitos) throw new Error('Los requisitos son obligatorios para publicar.');
+    if ((existingPropertyPhotos.length + selectedPhotoFiles.length) < 1) {
+      throw new Error('Debes agregar al menos una fotografía para publicar.');
+    }
   }
 
   let propertyId = qs('propertyId').value;
 
-  /*
-   * GUARDAR DATOS GENERALES
-   */
   if (propertyId) {
-    /*
-     * Si estamos editando una propiedad no modificamos aquí
-     * el estado publicada. La publicación se controla abajo.
-     */
     delete payload.publicada;
-
-    const { error } = await db
-      .from('propiedades')
-      .update(payload)
-      .eq('id', propertyId);
-
+    const { error } = await db.from('propiedades').update(payload).eq('id', propertyId);
     if (error) throw error;
-
   } else {
-    const { data, error } = await db
-      .from('propiedades')
-      .insert(payload)
-      .select('id')
-      .single();
-
+    const { data, error } = await db.from('propiedades').insert(payload).select('id').single();
     if (error) throw error;
-
     propertyId = data.id;
     qs('propertyId').value = propertyId;
   }
 
-  /*
-   * GUARDAR CARACTERÍSTICAS
-   */
   const values = collectFeatureValues();
 
   const { data: existingValues, error: existingError } = await db
@@ -1289,71 +1114,35 @@ async function saveProperty(publish) {
   if (existingError) throw existingError;
 
   const currentIds = new Set(values.keys());
-
-  const toDelete = (existingValues || [])
-    .filter(x => !currentIds.has(x.caracteristica_id))
-    .map(x => x.id);
+  const toDelete = (existingValues || []).filter(x => !currentIds.has(x.caracteristica_id)).map(x => x.id);
 
   if (toDelete.length) {
-    const { error } = await db
-      .from('propiedad_caracteristicas')
-      .delete()
-      .in('id', toDelete);
-
+    const { error } = await db.from('propiedad_caracteristicas').delete().in('id', toDelete);
     if (error) throw error;
   }
 
-  const upserts = [...values.entries()].map(
-    ([featureId, value]) => ({
-      propiedad_id: propertyId,
-      caracteristica_id: featureId,
-      valor: value
-    })
-  );
+  const upserts = [...values.entries()].map(([featureId, value]) => ({
+    propiedad_id: propertyId,
+    caracteristica_id: featureId,
+    valor: value
+  }));
 
   if (upserts.length) {
-    const { error } = await db
-      .from('propiedad_caracteristicas')
-      .upsert(upserts, {
-        onConflict: 'propiedad_id,caracteristica_id'
-      });
-
+    const { error } = await db.from('propiedad_caracteristicas').upsert(upserts, {
+      onConflict: 'propiedad_id,caracteristica_id'
+    });
     if (error) throw error;
   }
 
-  /*
-   * SUBIR FOTOGRAFÍAS NUEVAS
-   */
   await uploadPropertyPhotos(propertyId);
 
-  /*
-   * PUBLICAR
-   *
-   * Se conserva la RPC de Supabase como segunda capa de
-   * validación. La validación del navegador sirve para dar
-   * mensajes claros al agente antes de llegar al servidor.
-   */
   if (publish) {
-    const { error } = await db.rpc(
-      'publicar_propiedad',
-      {
-        p_propiedad_id: propertyId
-      }
-    );
-
+    const { error } = await db.rpc('publicar_propiedad', { p_propiedad_id: propertyId });
     if (error) throw error;
   }
 
-  setStatus(
-    status,
-    publish
-      ? '✓ Propiedad publicada.'
-      : '✓ Borrador guardado.',
-    'success'
-  );
-
+  setStatus(status, publish ? '✓ Propiedad publicada.' : '✓ Borrador guardado.', 'success');
   await loadProperties();
-
   setTimeout(closePropertyEditor, 700);
 }
 
@@ -1621,6 +1410,29 @@ async function loadLocationStats() {
   qs('locZones').textContent = z.count ?? 0;
 }
 
+async function syncIne() {
+  const status = qs('syncIneStatus');
+  qs('syncIneBtn').disabled = true;
+  setStatus(status, 'Sincronizando; puede tomar varios minutos...');
+
+  try {
+    const { data, error } = await db.functions.invoke('sincronizar-ubicaciones-ine', { body: {} });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    setStatus(
+      status,
+      `✓ Sincronización completada. Departamentos: ${data.departamentos ?? '—'}, municipios: ${data.municipios ?? '—'}, zonas: ${data.zonas_ine ?? '—'}.`,
+      'success'
+    );
+
+    await loadDepartments();
+    await loadLocationStats();
+  } finally {
+    qs('syncIneBtn').disabled = false;
+  }
+}
+
 function populateProfile() {
   qs('meName').value = currentAgent.nombre || '';
   qs('meSurname').value = currentAgent.apellido || '';
@@ -1629,6 +1441,103 @@ function populateProfile() {
   qs('meWhatsapp').value = currentAgent.whatsapp || '';
   qs('mePhoto').value = currentAgent.foto_url || '';
   qs('meBio').value = currentAgent.biografia || '';
+}
+
+async function loadCentralCalendarStatus() {
+  if (!isAdmin) return;
+
+  const text = qs('calendarConnectionText');
+  const connectBtn = qs('connectCalendarBtn');
+  const disconnectBtn = qs('disconnectCalendarBtn');
+  const status = qs('calendarStatus');
+
+  text.textContent = 'Consultando estado de Google Calendar…';
+  connectBtn.disabled = true;
+  disconnectBtn.disabled = true;
+
+  try {
+    const { data, error } = await db.functions.invoke('google-calendar-auth', {
+      body: { action: 'status' }
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    if (data?.connected) {
+      text.textContent = '✓ La cuenta central de Google Calendar de Carpe Diem está conectada.';
+      connectBtn.textContent = 'Reconectar Google Calendar';
+      disconnectBtn.style.display = '';
+    } else {
+      text.textContent = 'Google Calendar todavía no está conectado. Conecta la cuenta central de Carpe Diem para sincronizar las visitas.';
+      connectBtn.textContent = 'Conectar Google Calendar';
+      disconnectBtn.style.display = 'none';
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const calendarResult = params.get('calendar');
+
+    if (calendarResult === 'connected') {
+      setStatus(status, '✓ Google Calendar de Carpe Diem conectado correctamente.', 'success');
+      params.delete('calendar');
+      params.delete('reason');
+      const cleanUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '') + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } else if (calendarResult === 'error') {
+      const reason = params.get('reason') || 'desconocido';
+      setStatus(status, `No fue posible conectar Google Calendar (${reason}).`, 'error');
+    }
+  } finally {
+    connectBtn.disabled = false;
+    disconnectBtn.disabled = false;
+  }
+}
+
+async function connectCentralGoogleCalendar() {
+  if (!isAdmin) return;
+
+  const btn = qs('connectCalendarBtn');
+  btn.disabled = true;
+  setStatus(qs('calendarStatus'), 'Abriendo autorización de Google…');
+
+  try {
+    const { data, error } = await db.functions.invoke('google-calendar-auth', {
+      body: { action: 'connect' }
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    if (!data?.auth_url) throw new Error('No se recibió la URL de autorización de Google.');
+
+    window.location.href = data.auth_url;
+  } catch (error) {
+    btn.disabled = false;
+    setStatus(qs('calendarStatus'), error.message || 'No fue posible iniciar la conexión.', 'error');
+  }
+}
+
+async function disconnectCentralGoogleCalendar() {
+  if (!isAdmin) return;
+  if (!confirm('¿Desconectar la cuenta central de Google Calendar?')) return;
+
+  const btn = qs('disconnectCalendarBtn');
+  btn.disabled = true;
+  setStatus(qs('calendarStatus'), 'Desconectando…');
+
+  try {
+    const { data, error } = await db.functions.invoke('google-calendar-auth', {
+      body: { action: 'disconnect' }
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    setStatus(qs('calendarStatus'), '✓ Google Calendar desconectado.', 'success');
+    await loadCentralCalendarStatus();
+  } catch (error) {
+    setStatus(qs('calendarStatus'), error.message || 'No fue posible desconectar Google Calendar.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function saveProfile(event) {
@@ -1656,55 +1565,6 @@ async function saveProfile(event) {
   setStatus(qs('profileStatus'), '✓ Perfil actualizado.', 'success');
 }
 
-qs('recoveryForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const status = qs('recoveryStatus');
-  const button = qs('recoveryBtn');
-  const password = qs('recoveryPassword').value;
-  const confirmation = qs('recoveryPasswordConfirm').value;
-
-  setStatus(status, '');
-
-  if (password.length < 6) {
-    setStatus(status, 'La contraseña debe tener al menos 6 caracteres.', 'error');
-    return;
-  }
-
-  if (password !== confirmation) {
-    setStatus(status, 'Las contraseñas no coinciden.', 'error');
-    return;
-  }
-
-  button.disabled = true;
-  setStatus(status, 'Actualizando contraseña...');
-
-  try {
-    await updatePassword(password);
-    setStatus(status, '✓ Contraseña actualizada. Redirigiendo...', 'success');
-
-    // Cerramos la sesión para que el usuario vuelva a entrar con su nueva clave.
-    setTimeout(async () => {
-      try {
-        await db.auth.signOut();
-      } finally {
-        clearRecoveryUrl();
-        qs('recoveryForm').reset();
-        showLoginView('Contraseña actualizada. Ya puedes iniciar sesión con tu nueva contraseña.', 'success');
-      }
-    }, 900);
-  } catch (error) {
-    console.error(error);
-    setStatus(
-      status,
-      error?.message || 'No fue posible cambiar la contraseña. Solicita un nuevo enlace de recuperación.',
-      'error'
-    );
-  } finally {
-    button.disabled = false;
-  }
-});
-
 qs('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const status = qs('loginStatus');
@@ -1717,46 +1577,6 @@ qs('loginForm').addEventListener('submit', async (e) => {
     setStatus(status, error.message || 'No fue posible iniciar sesión.', 'error');
   } finally {
     qs('loginBtn').disabled = false;
-  }
-});
-
-qs('forgotPasswordBtn').addEventListener('click', async () => {
-  const email = qs('loginEmail').value.trim();
-  const status = qs('loginStatus');
-
-  if (!email) {
-    setStatus(status, 'Ingresa primero tu correo para enviarte el enlace de recuperación.', 'error');
-    qs('loginEmail').focus();
-    return;
-  }
-
-  const button = qs('forgotPasswordBtn');
-  button.disabled = true;
-  setStatus(status, 'Enviando enlace de recuperación...');
-
-  try {
-    const redirectTo = `${window.location.origin}${window.location.pathname}`;
-
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo
-    });
-
-    if (error) throw error;
-
-    setStatus(
-      status,
-      '✓ Revisa tu correo. El enlace te llevará a una pantalla para crear una nueva contraseña.',
-      'success'
-    );
-  } catch (error) {
-    console.error(error);
-    setStatus(
-      status,
-      error?.message || 'No fue posible enviar el enlace de recuperación.',
-      'error'
-    );
-  } finally {
-    button.disabled = false;
   }
 });
 
@@ -1921,6 +1741,7 @@ qs('featureMasterList').addEventListener('click', (e) => {
 qs('typeConfigSelect').addEventListener('change', () => loadTypeFeatureConfig(qs('typeConfigSelect').value).catch(showError));
 qs('saveTypeConfigBtn').addEventListener('click', () => saveTypeFeatureConfig().catch(error => setStatus(qs('typeConfigStatus'), error.message, 'error')));
 
+qs('syncIneBtn').addEventListener('click', () => syncIne().catch(error => setStatus(qs('syncIneStatus'), error.message, 'error')));
 
 qs('locDepartmentSelect').addEventListener('change', async () => {
   await loadMunicipalities(qs('locDepartmentSelect').value, qs('locMunicipalitySelect'));
@@ -1939,22 +1760,13 @@ qs('locMunicipalitySelect').addEventListener('change', async () => {
 });
 
 qs('profileForm').addEventListener('submit', (e) => saveProfile(e).catch(error => setStatus(qs('profileStatus'), error.message, 'error')));
+qs('connectCalendarBtn').addEventListener('click', connectCentralGoogleCalendar);
+qs('disconnectCalendarBtn').addEventListener('click', disconnectCentralGoogleCalendar);
 
 try {
   initializeSupabase();
-
-  // Supabase puede devolver el enlace de recuperación con los tokens
-  // en el fragmento de la URL. En ese caso NO entramos directamente
-  // al panel: mostramos primero el formulario para cambiar la clave.
-  db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      showRecoveryView();
-      return;
-    }
-
-    // Si el usuario ya terminó la recuperación y existe una sesión,
-    // dejamos que el flujo normal cargue el panel.
-    if (event === 'SIGNED_IN' && session && !isRecoveryUrl()) {
+  db.auth.getSession().then(async ({ data }) => {
+    if (data?.session) {
       try {
         await bootstrap();
       } catch (error) {
@@ -1963,35 +1775,6 @@ try {
       }
     }
   });
-
-  // Revisamos primero si esta página fue abierta desde el enlace
-  // de recuperación de contraseña.
-  if (isRecoveryUrl()) {
-    showRecoveryView();
-
-    // getSession() permite que Supabase termine de procesar el enlace
-    // antes de intentar actualizar la contraseña.
-    db.auth.getSession().then(({ data, error }) => {
-      if (error || !data?.session) {
-        setStatus(
-          qs('recoveryStatus'),
-          'El enlace de recuperación no es válido o ya venció. Solicita un nuevo enlace.',
-          'error'
-        );
-      }
-    });
-  } else {
-    db.auth.getSession().then(async ({ data }) => {
-      if (data?.session) {
-        try {
-          await bootstrap();
-        } catch (error) {
-          await db.auth.signOut();
-          setStatus(qs('loginStatus'), error.message || 'No fue posible cargar tu perfil.', 'error');
-        }
-      }
-    });
-  }
 } catch (error) {
   setStatus(qs('loginStatus'), error.message, 'error');
   qs('loginBtn').disabled = true;
