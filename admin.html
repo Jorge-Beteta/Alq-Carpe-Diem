@@ -76,6 +76,7 @@
           <button class="nav-item admin-only" data-view="features" style="display:none;">Características</button>
           <button class="nav-item admin-only" data-view="types" style="display:none;">Tipos de inmueble</button>
           <button class="nav-item admin-only" data-view="locations" style="display:none;">Ubicaciones</button>
+          <button class="nav-item" data-view="availability">Mi disponibilidad</button>
           <button class="nav-item" data-view="profile">Mi perfil</button>
         </nav>
       </aside>
@@ -490,6 +491,99 @@
           </div>
         </section>
 
+        <!-- AVAILABILITY -->
+        <section class="admin-view" id="view-availability">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">Agenda</span>
+              <h2>Mi disponibilidad</h2>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Horario habitual</span>
+                <h3>Horario semanal y duración de visitas</h3>
+              </div>
+            </div>
+
+            <p class="muted">
+              El bot solamente ofrecerá citas dentro de estos horarios. Los bloqueos, las citas existentes y los eventos ocupados de Google Calendar se restan automáticamente.
+            </p>
+
+            <div id="availabilityAdminAgentBox" class="field admin-only" style="display:none;">
+              <label for="availabilityAgentSelect">Agente</label>
+              <select id="availabilityAgentSelect"></select>
+            </div>
+
+            <div class="field">
+              <label for="visitDuration">Duración de cada visita</label>
+              <select id="visitDuration">
+                <option value="15">15 minutos</option>
+                <option value="30">30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60">60 minutos</option>
+                <option value="90">90 minutos</option>
+                <option value="120">120 minutos</option>
+              </select>
+            </div>
+
+            <div id="weeklySchedule" class="master-table"></div>
+
+            <div class="form-actions">
+              <button id="saveAvailabilityBtn" class="btn btn-primary" type="button">Guardar disponibilidad</button>
+              <span id="availabilityStatus" class="status-msg"></span>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Excepciones</span>
+                <h3>Bloquear un horario</h3>
+              </div>
+            </div>
+
+            <p class="muted">
+              Úsalo para reuniones, vacaciones, compromisos personales u otros períodos en los que no deseas recibir visitas.
+            </p>
+
+            <form id="blockForm">
+              <div class="field-row two">
+                <div class="field">
+                  <label for="blockStart">Desde</label>
+                  <input id="blockStart" type="datetime-local" required>
+                </div>
+                <div class="field">
+                  <label for="blockEnd">Hasta</label>
+                  <input id="blockEnd" type="datetime-local" required>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="blockReason">Motivo</label>
+                <input id="blockReason" type="text" maxlength="200" placeholder="Ej. Reunión, vacaciones, compromiso personal">
+              </div>
+
+              <div class="form-actions">
+                <button id="addBlockBtn" class="btn btn-primary" type="submit">Bloquear horario</button>
+                <span id="blockStatus" class="status-msg"></span>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <span class="eyebrow">Bloqueos activos</span>
+                <h3>Próximos períodos no disponibles</h3>
+              </div>
+            </div>
+            <div id="blockList"></div>
+          </div>
+        </section>
+
         <!-- PROFILE -->
         <section class="admin-view" id="view-profile">
           <div class="page-heading">
@@ -593,6 +687,8 @@ let departments = [];
 let municipalities = [];
 let zones = [];
 let properties = [];
+let availabilityTargetAgentId = null;
+let availabilityData = null;
 
 let editingProperty = null;
 let existingPropertyPhotos = [];
@@ -693,6 +789,7 @@ async function bootstrap() {
   ]);
   await loadProperties();
   populateProfile();
+  setupAvailabilityAgentSelector();
   qs('logoutBtn').style.display = 'inline-flex';
   qs('loginView').style.display = 'none';
   qs('appView').style.display = 'block';
@@ -894,6 +991,7 @@ function showView(name) {
   if (name === 'agents' && isAdmin) loadAgents().catch(showError);
   if (name === 'features' && isAdmin) loadFeatures().catch(showError);
   if (name === 'locations' && isAdmin) loadLocationStats().catch(showError);
+  if (name === 'availability') loadAvailability().catch(showError);
 }
 
 function showError(error) {
@@ -1433,6 +1531,244 @@ async function syncIne() {
   }
 }
 
+
+const WEEKDAYS = [
+  { id: 1, name: 'Lunes' },
+  { id: 2, name: 'Martes' },
+  { id: 3, name: 'Miércoles' },
+  { id: 4, name: 'Jueves' },
+  { id: 5, name: 'Viernes' },
+  { id: 6, name: 'Sábado' },
+  { id: 7, name: 'Domingo' }
+];
+
+function setupAvailabilityAgentSelector() {
+  availabilityTargetAgentId = currentAgent.id;
+
+  const box = qs('availabilityAdminAgentBox');
+  const select = qs('availabilityAgentSelect');
+
+  if (!isAdmin) {
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = '';
+
+  const activeAgents = agents.filter(a => a.activo);
+  select.innerHTML = activeAgents
+    .map(a => `<option value="${a.id}">${esc([a.nombre, a.apellido].filter(Boolean).join(' '))}</option>`)
+    .join('');
+
+  if (activeAgents.some(a => a.id === currentAgent.id)) {
+    select.value = currentAgent.id;
+  } else if (activeAgents[0]) {
+    select.value = activeAgents[0].id;
+  }
+
+  availabilityTargetAgentId = select.value || currentAgent.id;
+}
+
+function renderWeeklySchedule(rows = []) {
+  const byDay = new Map((rows || []).map(r => [Number(r.dia_semana), r]));
+
+  qs('weeklySchedule').innerHTML = WEEKDAYS.map(day => {
+    const row = byDay.get(day.id);
+    const active = !!row?.activo;
+    const start = String(row?.hora_inicio || '09:00').slice(0, 5);
+    const end = String(row?.hora_fin || '17:00').slice(0, 5);
+
+    return `
+      <div class="master-row" data-schedule-day="${day.id}">
+        <label class="check-line" style="min-width:130px;">
+          <input type="checkbox" data-schedule-active="${day.id}" ${active ? 'checked' : ''}>
+          <strong>${day.name}</strong>
+        </label>
+        <div class="field-row two" style="flex:1; margin:0;">
+          <div class="field" style="margin:0;">
+            <label>Inicio</label>
+            <input type="time" data-schedule-start="${day.id}" value="${esc(start)}" ${active ? '' : 'disabled'}>
+          </div>
+          <div class="field" style="margin:0;">
+            <label>Fin</label>
+            <input type="time" data-schedule-end="${day.id}" value="${esc(end)}" ${active ? '' : 'disabled'}>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('[data-schedule-active]').forEach(check => {
+    check.addEventListener('change', () => {
+      const day = check.dataset.scheduleActive;
+      document.querySelector(`[data-schedule-start="${day}"]`).disabled = !check.checked;
+      document.querySelector(`[data-schedule-end="${day}"]`).disabled = !check.checked;
+    });
+  });
+}
+
+function formatBlockDate(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('es-GT', {
+    timeZone: 'America/Guatemala',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).format(new Date(iso));
+}
+
+function renderBlocks(blocks = []) {
+  const active = (blocks || [])
+    .filter(b => b.activo !== false)
+    .sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
+
+  qs('blockList').innerHTML = active.length
+    ? `<div class="master-table">
+        ${active.map(b => `
+          <div class="master-row">
+            <div>
+              <strong>${esc(b.motivo || 'Bloqueo de agenda')}</strong>
+              <span>${esc(formatBlockDate(b.inicio))} → ${esc(formatBlockDate(b.fin))}</span>
+            </div>
+            <button class="btn btn-danger btn-small" type="button" data-delete-block="${b.id}">Eliminar</button>
+          </div>`).join('')}
+      </div>`
+    : '<p class="muted">No hay bloqueos próximos.</p>';
+}
+
+async function loadAvailability() {
+  const target = isAdmin
+    ? (qs('availabilityAgentSelect').value || availabilityTargetAgentId || currentAgent.id)
+    : currentAgent.id;
+
+  availabilityTargetAgentId = target;
+  setStatus(qs('availabilityStatus'), 'Cargando...');
+  setStatus(qs('blockStatus'), '');
+
+  const { data, error } = await db.rpc('obtener_disponibilidad_agente', {
+    p_agente_id: target
+  });
+
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+
+  availabilityData = data || {};
+  qs('visitDuration').value = String(availabilityData.duracion_visita_minutos || 30);
+  renderWeeklySchedule(availabilityData.horarios || []);
+  renderBlocks(availabilityData.bloqueos || []);
+  setStatus(qs('availabilityStatus'), '');
+}
+
+async function saveAvailability() {
+  const status = qs('availabilityStatus');
+  const btn = qs('saveAvailabilityBtn');
+  btn.disabled = true;
+  setStatus(status, 'Guardando...');
+
+  try {
+    const horarios = [];
+
+    for (const day of WEEKDAYS) {
+      const active = document.querySelector(`[data-schedule-active="${day.id}"]`).checked;
+      if (!active) continue;
+
+      const start = document.querySelector(`[data-schedule-start="${day.id}"]`).value;
+      const end = document.querySelector(`[data-schedule-end="${day.id}"]`).value;
+
+      if (!start || !end) throw new Error(`Completa el horario de ${day.name}.`);
+      if (start >= end) throw new Error(`La hora final de ${day.name} debe ser posterior a la inicial.`);
+
+      horarios.push({
+        dia_semana: day.id,
+        hora_inicio: start,
+        hora_fin: end,
+        activo: true
+      });
+    }
+
+    const { data, error } = await db.rpc('guardar_disponibilidad_agente', {
+      p_agente_id: availabilityTargetAgentId,
+      p_duracion_visita_minutos: Number(qs('visitDuration').value),
+      p_horarios: horarios
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    if (availabilityTargetAgentId === currentAgent.id) {
+      currentAgent.duracion_visita_minutos = Number(qs('visitDuration').value);
+    }
+
+    setStatus(status, '✓ Disponibilidad actualizada.', 'success');
+    await loadAvailability();
+  } catch (error) {
+    setStatus(status, error.message || 'No fue posible guardar.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function guatemalaIsoFromLocalInput(value) {
+  if (!value) return null;
+  return `${value}:00-06:00`;
+}
+
+async function createAvailabilityBlock(event) {
+  event.preventDefault();
+
+  const status = qs('blockStatus');
+  const btn = qs('addBlockBtn');
+  btn.disabled = true;
+  setStatus(status, 'Guardando bloqueo...');
+
+  try {
+    const startValue = qs('blockStart').value;
+    const endValue = qs('blockEnd').value;
+
+    if (!startValue || !endValue) throw new Error('Selecciona fecha y hora de inicio y fin.');
+
+    const start = new Date(guatemalaIsoFromLocalInput(startValue));
+    const end = new Date(guatemalaIsoFromLocalInput(endValue));
+
+    if (!(end > start)) throw new Error('La hora final debe ser posterior a la inicial.');
+
+    const { data, error } = await db.rpc('crear_bloqueo_agente', {
+      p_agente_id: availabilityTargetAgentId,
+      p_inicio: start.toISOString(),
+      p_fin: end.toISOString(),
+      p_motivo: qs('blockReason').value.trim() || null
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    qs('blockForm').reset();
+    setStatus(status, '✓ Horario bloqueado.', 'success');
+    await loadAvailability();
+  } catch (error) {
+    setStatus(status, error.message || 'No fue posible crear el bloqueo.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteAvailabilityBlock(blockId) {
+  if (!confirm('¿Eliminar este bloqueo y volver a habilitar ese horario?')) return;
+
+  const { data, error } = await db.rpc('eliminar_bloqueo_agente', {
+    p_bloqueo_id: blockId
+  });
+
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+
+  await loadAvailability();
+}
+
+
 function populateProfile() {
   qs('meName').value = currentAgent.nombre || '';
   qs('meSurname').value = currentAgent.apellido || '';
@@ -1757,6 +2093,18 @@ qs('locMunicipalitySelect').addEventListener('change', async () => {
   qs('locationPreview').innerHTML = `
     <h4>Zonas registradas</h4>
     <div class="chips">${result.map(z => `<span>${esc(z.nombre)}</span>`).join('')}</div>`;
+});
+
+qs('availabilityAgentSelect').addEventListener('change', () => {
+  availabilityTargetAgentId = qs('availabilityAgentSelect').value || currentAgent.id;
+  loadAvailability().catch(showError);
+});
+
+qs('saveAvailabilityBtn').addEventListener('click', saveAvailability);
+qs('blockForm').addEventListener('submit', createAvailabilityBlock);
+qs('blockList').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-delete-block]');
+  if (btn) deleteAvailabilityBlock(btn.dataset.deleteBlock).catch(showError);
 });
 
 qs('profileForm').addEventListener('submit', (e) => saveProfile(e).catch(error => setStatus(qs('profileStatus'), error.message, 'error')));
