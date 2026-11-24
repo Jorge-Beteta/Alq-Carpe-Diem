@@ -553,6 +553,7 @@
           <button class="nav-item admin-only" data-view="types" style="display:none;">Tipos de inmueble</button>
           <button class="nav-item admin-only" data-view="locations" style="display:none;">Ubicaciones</button>
           <button class="nav-item" data-view="appointments">Citas <span id="appointmentNavCount" hidden></span></button>
+          <button class="nav-item" data-view="attention">Atención a interesados <span id="attentionNavCount" hidden></span></button>
           <button class="nav-item" data-view="availability">Mi disponibilidad</button>
           <button class="nav-item" data-view="profile">Mi perfil</button>
         </nav>
@@ -1038,6 +1039,27 @@
           </div>
         </section>
 
+        <!-- ATTENTION V8: read-only -->
+        <section class="admin-view" id="view-attention">
+          <div class="page-heading"><div><span class="eyebrow">Gestión comercial</span><h2>Atención a interesados</h2></div><button id="refreshAttentionBtn" class="btn btn-secondary btn-small" type="button">Actualizar</button></div>
+          <div class="stats-grid">
+            <article class="stat-card"><span>Pendientes / asignados</span><strong id="attentionPending">—</strong></article>
+            <article class="stat-card"><span>En atención</span><strong id="attentionActive">—</strong></article>
+            <article class="stat-card"><span>Atendidos</span><strong id="attentionDone">—</strong></article>
+            <article class="stat-card"><span>Cerrados</span><strong id="attentionClosed">—</strong></article>
+          </div>
+          <div class="admin-card"><p class="muted" id="attentionScope"></p><p class="muted">El estado atendido indica la finalización técnica de la sesión, no un resultado comercial. La finalización se realiza desde WhatsApp del agente.</p><p id="attentionStatus" class="status-msg" role="status" aria-live="polite"></p></div>
+          <div class="admin-card"><h3>Requieren atención</h3><p class="muted">Solicitudes abiertas de tu ámbito de acceso, independientemente de los filtros del historial.</p><div id="attentionQueue"></div></div>
+          <div class="admin-card"><h3>Historial de atenciones</h3>
+            <div class="compact-filters">
+              <select id="attentionStateFilter"><option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="asignado">Asignado</option><option value="atendiendo">En atención</option><option value="atendido">Atendido</option><option value="cerrado">Cerrado</option></select>
+              <select id="attentionKindFilter"><option value="">Todos los tipos</option><option value="general">Atención general</option><option value="property">Sobre propiedad</option></select>
+              <select id="attentionAgentFilter" class="admin-only" style="display:none"><option value="">Todos los agentes</option></select>
+              <input id="attentionSearch" type="search" placeholder="Buscar interesado o propiedad">
+            </div><p id="attentionHistoryCount" class="muted"></p><div id="attentionHistory"></div>
+          </div>
+        </section>
+
         <!-- AVAILABILITY -->
         <section class="admin-view" id="view-availability">
           <div class="page-heading">
@@ -1356,9 +1378,11 @@ async function bootstrap() {
   qs('loginView').style.display = 'none';
   qs('appView').style.display = 'block';
   loadAppointments().catch(error => setStatus(qs('appointmentStatus'), error.message, 'error'));
+  loadAttention(true).catch(console.error);
   if (appointmentRefreshTimer) clearInterval(appointmentRefreshTimer);
   appointmentRefreshTimer = setInterval(() => {
     if (!document.hidden && !appointmentActionBusy) loadAppointments(true).catch(console.error);
+    if (!document.hidden && qs('view-attention').classList.contains('active')) loadAttention(true).catch(console.error);
   }, 60000);
 
   if (isAdmin) {
@@ -1560,6 +1584,7 @@ function showView(name) {
   if (name === 'locations' && isAdmin) loadLocationStats().catch(showError);
   if (name === 'appointments') loadAppointments().catch(showError);
   if (name === 'availability') loadAvailability().catch(showError);
+  if (name === 'attention') loadAttention().catch(console.error);
 }
 
 function showError(error) {
@@ -2375,6 +2400,69 @@ qs('visitResultForm').addEventListener('submit',async e=>{
   }catch(error){setStatus(qs('visitResultStatus'),error.message,'error');}
   finally{appointmentActionBusy=false;qs('visitResultSave').disabled=false;renderAppointments();}
 });
+
+// ATTENTION V8 — independent read-only RPC
+let attentionRows = [];
+let attentionSequence = 0;
+let attentionLoaded = false;
+const attentionLabels = {pendiente:'Pendiente',asignado:'Asignado',atendiendo:'En atención',atendido:'Atendido',cerrado:'Cerrado'};
+function attentionOpen(r) { return r.sesion_activa || ['pendiente','asignado','atendiendo'].includes(r.estado); }
+function attentionRowHtml(r) {
+  const label = attentionLabels[r.estado] || r.estado || 'Sin estado';
+  const badge = r.estado === 'atendido' ? 'available' : r.estado === 'cerrado' ? 'unavailable' : 'draft';
+  return `<article class="property-row-v3"><div class="property-row-content">
+    <div class="property-row-titleline"><h3>${esc(r.cliente_nombre || 'Interesado')}</h3><span class="mini-badge ${badge}">${esc(label)}</span></div>
+    <p>${esc(r.cliente_telefono || 'Sin teléfono')} · ${esc(r.tipo_contacto === 'llamada' ? 'Llamada' : r.tipo_contacto === 'whatsapp' ? 'WhatsApp' : r.tipo_contacto || 'Sin canal')}</p>
+    <p>${esc(r.propiedad_id ? r.propiedad_titulo || 'Propiedad sin título' : 'Atención general')}</p>
+    <p>Agente: ${esc(r.agente_nombre || 'Sin asignar')}</p>
+    <p class="muted">Solicitada: ${esc(formatAppointmentPanelDate(r.solicitado_en))}</p>
+    <p class="muted">${r.sesion_activa ? 'Sesión activa · Bot pausado' : r.sesion_finalizada_en ? 'Sesión finalizada: '+esc(formatAppointmentPanelDate(r.sesion_finalizada_en)) : 'Sin sesión activa'}</p>
+    ${r.cerrado_en ? `<p class="muted">Cierre: ${esc(formatAppointmentPanelDate(r.cerrado_en))}</p>` : ''}
+  </div></article>`;
+}
+function renderAttention() {
+  if (!attentionLoaded) return;
+  const rows=attentionRows;
+  const queue=rows.filter(attentionOpen);
+  qs('attentionPending').textContent=rows.filter(r=>['pendiente','asignado'].includes(r.estado)).length;
+  qs('attentionActive').textContent=rows.filter(r=>r.estado==='atendiendo').length;
+  qs('attentionDone').textContent=rows.filter(r=>r.estado==='atendido').length;
+  qs('attentionClosed').textContent=rows.filter(r=>r.estado==='cerrado').length;
+  qs('attentionNavCount').hidden=!queue.length;
+  qs('attentionNavCount').textContent=`(${queue.length})`;
+  qs('attentionQueue').innerHTML=queue.length?queue.slice().reverse().map(attentionRowHtml).join(''):'<p class="muted">No hay solicitudes abiertas.</p>';
+  const state=qs('attentionStateFilter').value, kind=qs('attentionKindFilter').value, agent=isAdmin?qs('attentionAgentFilter').value:'', search=qs('attentionSearch').value.trim().toLowerCase();
+  const filtered=rows.filter(r=>(!state||r.estado===state)&&(!kind||(kind==='general'?!r.propiedad_id:!!r.propiedad_id))&&(!agent||r.agente_id===agent)&&(!search||[r.cliente_nombre,r.cliente_telefono,r.propiedad_titulo,r.agente_nombre].filter(Boolean).join(' ').toLowerCase().includes(search)));
+  qs('attentionHistoryCount').textContent=`${filtered.length} de ${rows.length} solicitudes`;
+  qs('attentionHistory').innerHTML=filtered.length?filtered.map(attentionRowHtml).join(''):'<p class="muted">No hay solicitudes que coincidan con los filtros.</p>';
+}
+async function loadAttention(silent=false) {
+  const seq=++attentionSequence;
+  const status=qs('attentionStatus');
+  qs('attentionScope').textContent=isAdmin?'Vista administrativa: todos los agentes.':'Vista de agente: únicamente tus solicitudes asignadas.';
+  if(!silent) setStatus(status,'Cargando atenciones...');
+  try {
+    const {data,error}=await db.rpc('listar_atenciones_panel');
+    if(seq!==attentionSequence)return;
+    if(error)throw error;
+    if(!Array.isArray(data))throw new Error('Respuesta inesperada del servidor.');
+    attentionRows=data; attentionLoaded=true;
+    const select=qs('attentionAgentFilter'), previous=select.value;
+    if(isAdmin){
+      const options=new Map(data.filter(r=>r.agente_id).map(r=>[r.agente_id,r.agente_nombre||'Agente']));
+      select.innerHTML='<option value="">Todos los agentes</option>'+[...options].map(([id,name])=>`<option value="${esc(id)}">${esc(name)}</option>`).join('');
+      if(options.has(previous))select.value=previous;
+    }
+    renderAttention(); setStatus(status,'Actualizado: '+formatAppointmentPanelDate(new Date().toISOString()));
+  } catch(error) {
+    if(seq!==attentionSequence)return;
+    setStatus(status,(attentionLoaded?'No se pudo actualizar; datos anteriores: ':'No se pudo cargar: ')+(error.message||'Error desconocido'),'error');
+    if(!attentionLoaded){qs('attentionQueue').textContent='No disponible.';qs('attentionHistory').textContent='No disponible.';}
+    console.error(error);
+  }
+}
+qs('refreshAttentionBtn').addEventListener('click',()=>loadAttention());
+['attentionStateFilter','attentionKindFilter','attentionAgentFilter','attentionSearch'].forEach(id=>{qs(id).addEventListener('input',renderAttention);qs(id).addEventListener('change',renderAttention);});
 
 const WEEKDAYS = [
   { id: 1, name: 'Lunes' },
